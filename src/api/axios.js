@@ -2,7 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "https://crm-backend-6aw1.onrender.com/api",
+  withCredentials: false,
 });
 
 api.interceptors.request.use((config) => {
