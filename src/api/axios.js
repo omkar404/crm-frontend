@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const api = axios.create({
-  baseURL: "https://crm-backend-6aw1.onrender.com/api",
+  baseURL: "https://crm-backend-6aw1.onrender.com/",
   withCredentials: false,
 });
 
