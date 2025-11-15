@@ -64,7 +64,7 @@ export default function ImportModal({ open, setOpen, onImported }) {
         </div>
 
         <div className="flex justify-between mt-4">
-          <a href="http://localhost:5000/api/auth/sample" download className="text-blue-600 underline text-sm">
+          <a href="https://crm-backend-6aw1.onrender.com/api/auth/sample" download className="text-blue-600 underline text-sm">
             Download Sample File
           </a>
           <div className="space-x-2">
