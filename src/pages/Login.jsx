@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/utils/customToast";
 import { useAuth } from "../store/AuthContext";
 
-import Logo from "../assets/CRM.png";
+import Logo from "../assets/CRM.jpg";
 import api from "@/api/axios";
 
 export default function Login() {
@@ -25,13 +25,10 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const { data } = await api.post(
-        "/api/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+      const { data } = await api.post("/api/auth/login", {
+        email,
+        password,
+      });
 
       login(data.token);
       successToast("Login successful!");
@@ -47,7 +44,7 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden">
       {/* LEFT PANEL - FIXED */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-black overflow-hidden">
+      <div className="hidden md:flex flex-col items-center justify-center bg-white overflow-hidden">
         <img
           src={Logo}
           alt="CRM Logo"

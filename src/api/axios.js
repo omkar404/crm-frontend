@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 
 const api = axios.create({
   baseURL: "https://crm-backend-6aw1.onrender.com/",
+  // baseURL: "http://localhost:5000/",
   withCredentials: false,
 });
 

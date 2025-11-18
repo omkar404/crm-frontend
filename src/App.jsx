@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import LeadTable from "./pages/LeadTable.jsx";
-import Pipeline from "./pages/Pipeline.jsx";
+import LeadSummary from "./pages/fetchSummary.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
@@ -55,7 +55,7 @@ export default function App() {
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/leads" element={<LeadTable />} />
-                  <Route path="/pipeline" element={<Pipeline />} />
+                  <Route path="/summary" element={<LeadSummary />} />
                   <Route path="/admin" element={<AdminPanel />} />
                 </Routes>
               </ProtectedLayout>

@@ -45,18 +45,79 @@ const priorityBorder = {
 const statusColors = {
   "Not Contacted": "bg-gray-100 text-gray-700",
   "Email Sent": "bg-blue-100 text-blue-700",
-  "Contact on phone": "bg-yellow-100 text-yellow-700",
+  // "Contact on phone": "bg-yellow-100 text-yellow-700",
   "In Contact": "bg-teal-100 text-teal-700",
   Interested: "bg-green-100 text-green-700",
   "In Process": "bg-orange-100 text-orange-700",
   "Login Created": "bg-purple-100 text-purple-700",
-  "Login Rejected": "bg-red-100 text-red-700",
-  "Not Interested": "bg-red-200 text-red-800",
-  "Not Contactable": "bg-gray-200 text-gray-800",
-  "Spam / Fake Lead": "bg-black text-white",
+  "Do Not Touch": "bg-pink-100 text-pink-700",
+  // "Login Rejected": "bg-red-100 text-red-700",
+  // "Not Interested": "bg-red-200 text-red-800",
+  // "Not Contactable": "bg-gray-200 text-gray-800",
+  // "Spam / Fake Lead": "bg-black text-white",
 };
 
 const priorityOrder = { Premium: 0, High: 1, Medium: 2, Low: 3, "": 4 };
+
+// Lists
+const AEOStatusList = ["NA", "AEO - T1", "AEO - T2", "AEO - T3", "AEO - LEO"];
+const RCMCPanelList = [
+  "FIEO",
+  "EPC",
+  "APPARELS",
+  "CHEMICALS/PLASTIC",
+  "Pharmaceuticals",
+  "Gems & Jewellery",
+  "Leather",
+  "Handicraft",
+  "Electronics & IT",
+  "Sports Goods",
+  "Services",
+  "Commodity Boards",
+  "Agricultural Products",
+  "Marine Products",
+];
+
+const industryList = [
+  "Agriculture & Farming",
+  "Mining & Quarrying",
+  "Manufacturing",
+  "Construction",
+  "Utilities",
+  "IT & Software Services",
+  "Financial Services",
+  "Trade (Wholesale & Retail)",
+  "Transport & Logistics",
+  "Tourism & Hospitality",
+  "Telecommunications",
+  "Healthcare",
+  "Education",
+  "Media & Entertainment",
+  "Professional Services",
+  "Public Administration",
+];
+
+const leadTypeList = [
+  "CHA",
+  "Logistics",
+  "Freight Forwarder",
+  "Manufacturer",
+  "Importer",
+  "Exporter",
+];
+const leadSourceList = [
+  "RCMC Panel",
+  "CHA Panel",
+  "Website",
+  "In Person",
+  "In Reference",
+  "Print Media",
+  "FSSAI Panel",
+  "EPR Panel",
+  "Web Media",
+  "AEO Panel",
+  "Others",
+];
 
 function highlight(text = "", query = "") {
   if (!query) return escapeHtml(text);
@@ -82,13 +143,22 @@ function escapeRegex(s) {
 export default function LeadTable() {
   const [leads, setLeads] = useState([]);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");
   const [open, setOpen] = useState(false);
   const [editLead, setEditLead] = useState(null);
   const [viewMode, setViewMode] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
+  //filter
+  const [status, setStatus] = useState("");
+  const [aeoStatus, setAeoStatus] = useState("");
+  const [rcmcStatus, setRcmcStatus] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [leadType, setLeadType] = useState("");
+  const [leadSource, setLeadSource] = useState("");
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -133,11 +203,76 @@ export default function LeadTable() {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
+  const handleBulkStatusUpdate = async () => {
+    const { value: status } = await Swal.fire({
+      title: "Update Status",
+      input: "select",
+      inputOptions: {
+        "Not Contacted": "Not Contacted",
+        "Email Sent": "Email Sent",
+        "Contact on phone": "Contact on phone",
+        "In Contact": "In Contact",
+        Interested: "Interested",
+        "In Process": "In Process",
+        "Login Created": "Login Created",
+        "Login Rejected": "Login Rejected",
+        "Not Interested": "Not Interested",
+        "Not Contactable": "Not Contactable",
+        "Spam / Fake Lead": "Spam / Fake Lead",
+        "Do Not Touch": "Do Not Touch",
+      },
+      inputPlaceholder: "Choose new status",
+      showCancelButton: true,
+    });
+
+    if (!status) return;
+
+    try {
+      await api.put("api/auth/bulk-update-status", {
+        ids: selectedLeads,
+        status,
+      });
+
+      successToast("Status updated for selected leads");
+      setSelectedLeads([]);
+      setSelectAll(false);
+      fetchLeads();
+    } catch (err) {
+      console.error(err);
+      errorToast("Status update failed");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const confirm = await Swal.fire({
+      title: "Delete selected leads?",
+      text: `${selectedLeads.length} leads will be removed.`,
+      icon: "warning",
+      showCancelButton: true,
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await api.post("api/auth/bulk-delete", { ids: selectedLeads });
+
+      successToast("Selected leads deleted");
+      setSelectedLeads([]);
+      setSelectAll(false);
+      fetchLeads();
+    } catch (err) {
+      console.error(err);
+      errorToast("Bulk delete failed");
+    }
+  };
+
   const fetchLeads = useCallback(async () => {
     try {
       // your API supports pagination and search
       const r = await api.get(
-        `api/auth/list?page=${page}&limit=${limit}&search=${encodeURIComponent(q)}`
+        `api/auth/list?page=${page}&limit=${limit}&search=${encodeURIComponent(
+          q
+        )}`
       );
       setLeads(Array.isArray(r.data.leads) ? r.data.leads : []);
       setTotalPages(r.data.totalPages || 1);
@@ -155,9 +290,33 @@ export default function LeadTable() {
   }, [fetchLeads]);
 
   // client filtering on status & search (server search used but keep client safety)
+  // const filtered = useMemo(() => {
+  //   if (!Array.isArray(leads)) return [];
+  //   const query = q.trim().toLowerCase();
+  //   return leads.filter((l) => {
+  //     const hay = [
+  //       l.idNo,
+  //       l.name,
+  //       l.email,
+  //       l.mobileNo,
+  //       l.industry,
+  //       l.leadType,
+  //       l.leadStatus,
+  //       l.priorityRating,
+  //     ]
+  //       .join(" ")
+  //       .toLowerCase();
+  //     const matchQ = query ? hay.includes(query) : true;
+  //     const matchS = status ? l.leadStatus === status : true;
+  //     return matchQ && matchS;
+  //   });
+  // }, [leads, q, status]);
+
   const filtered = useMemo(() => {
     if (!Array.isArray(leads)) return [];
+
     const query = q.trim().toLowerCase();
+
     return leads.filter((l) => {
       const hay = [
         l.idNo,
@@ -166,16 +325,36 @@ export default function LeadTable() {
         l.mobileNo,
         l.industry,
         l.leadType,
+        l.leadSource,
+        l.RCMCPanel,
+        l.AEOStatus,
         l.leadStatus,
         l.priorityRating,
       ]
         .join(" ")
         .toLowerCase();
+
       const matchQ = query ? hay.includes(query) : true;
-      const matchS = status ? l.leadStatus === status : true;
-      return matchQ && matchS;
+
+      // INDIVIDUAL FILTER MATCHERS
+      const matchStatus = status ? l.leadStatus === status : true;
+      const matchAEO = aeoStatus ? l.AEOStatus === aeoStatus : true;
+      const matchRCMC = rcmcStatus ? l.RCMCPanel === rcmcStatus : true;
+      const matchIndustry = industry ? l.industry === industry : true;
+      const matchLeadType = leadType ? l.leadType === leadType : true;
+      const matchLeadSource = leadSource ? l.leadSource === leadSource : true;
+
+      return (
+        matchQ &&
+        matchStatus &&
+        matchAEO &&
+        matchRCMC &&
+        matchIndustry &&
+        matchLeadType &&
+        matchLeadSource
+      );
     });
-  }, [leads, q, status]);
+  }, [leads, q, status, aeoStatus, rcmcStatus, industry, leadType, leadSource]);
 
   const sorted = useMemo(() => {
     const data = [...filtered];
@@ -302,6 +481,11 @@ export default function LeadTable() {
             onClick={() => {
               setQ("");
               setStatus("");
+              setAeoStatus("");
+              setRcmcStatus("");
+              setIndustry("");
+              setLeadType("");
+              setLeadSource("");
               setPage(1);
               fetchLeads();
               successToast("Refreshed");
@@ -371,11 +555,44 @@ export default function LeadTable() {
         </div>
       </div>
 
+      {selectedLeads.length > 0 && (
+        <div className="flex items-center gap-3 bg-blue-50 p-3 rounded border my-2">
+          <span className="font-semibold">{selectedLeads.length} selected</span>
+
+          <Button variant="outline" onClick={handleBulkStatusUpdate}>
+            Update Status
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleBulkDelete}
+            className="text-red-600"
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
       {showFilters && (
         <LeadFilters
           status={status}
           setStatus={setStatus}
           leadStatusList={Object.keys(statusColors)}
+          aeoStatus={aeoStatus}
+          setAeoStatus={setAeoStatus}
+          AEOStatusList={AEOStatusList}
+          rcmcStatus={rcmcStatus}
+          setRcmcStatus={setRcmcStatus}
+          RCMCPanelList={RCMCPanelList}
+          industry={industry}
+          setIndustry={setIndustry}
+          industryList={industryList}
+          leadType={leadType}
+          setLeadType={setLeadType}
+          leadTypeList={leadTypeList}
+          leadSource={leadSource}
+          setLeadSource={setLeadSource}
+          leadSourceList={leadSourceList}
         />
       )}
 
@@ -398,6 +615,17 @@ export default function LeadTable() {
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 bg-gray-100 z-40">
               <TableRow>
+                <TableHead>
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={(e) => {
+                      setSelectAll(e.target.checked);
+                      setSelectedLeads(checked ? sorted.map((l) => l._id) : []);
+                    }}
+                  />
+                </TableHead>
+
                 <TableHead>Sr. No.</TableHead>
                 <TableHead>ID</TableHead>
 
@@ -423,6 +651,8 @@ export default function LeadTable() {
 
                 <TableHead>Mobile</TableHead>
                 <TableHead>Industry</TableHead>
+                <TableHead>RCMC Panel</TableHead>
+                <TableHead>Lead Source</TableHead>
                 <TableHead>Lead Type</TableHead>
 
                 <TableHead
@@ -484,6 +714,26 @@ export default function LeadTable() {
                       }}
                     >
                       {/* <TableCell>{index}</TableCell> */}
+                      <TableCell
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-center w-10"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLeads.includes(l._id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedLeads((prev) => [...prev, l._id]);
+                            } else {
+                              setSelectedLeads((prev) =>
+                                prev.filter((id) => id !== l._id)
+                              );
+                              setSelectAll(false);
+                            }
+                          }}
+                        />
+                      </TableCell>
+
                       <TableCell
                         className={
                           rowPriority === "Premium"
@@ -558,6 +808,10 @@ export default function LeadTable() {
                       </TableCell>
 
                       <TableCell>{l.industry || "—"}</TableCell>
+
+                      <TableCell>{l.RCMCPanel || "—"}</TableCell>
+
+                      <TableCell>{l.leadSource || "—"}</TableCell>
 
                       <TableCell>{l.leadType || "—"}</TableCell>
 

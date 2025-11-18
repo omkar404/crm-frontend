@@ -15,7 +15,7 @@ export default function ProtectedLayout({ children }) {
         <nav className="space-y-2">
           <Link to="/dashboard" className="block hover:text-blue-400">Dashboard</Link>
           <Link to="/leads" className="block hover:text-blue-400">Lead Table</Link>
-          <Link to="/pipeline" className="block hover:text-blue-400">Pipeline</Link>
+          <Link to="/summary" className="block hover:text-blue-400">Lead Summary</Link>
           <Link to="/admin" className="block hover:text-blue-400">Admin Panel</Link>
         </nav>
 
