@@ -268,119 +268,69 @@ export default function LeadTable() {
 
   const fetchLeads = useCallback(async () => {
     try {
-      // your API supports pagination and search
-      const r = await api.get(
-        `api/auth/list?page=${page}&limit=${limit}&search=${encodeURIComponent(
-          q
-        )}`
-      );
+      const r = await api.get("api/auth/list", {
+        params: {
+          page,
+          limit,
+          search: q,
+          leadStatus: status,
+          industry: industry,
+          leadType: leadType,
+          leadSource: leadSource,
+          AEOStatus: aeoStatus,
+          RCMCPanel: rcmcStatus,
+        },
+      });
+
       setLeads(Array.isArray(r.data.leads) ? r.data.leads : []);
       setTotalPages(r.data.totalPages || 1);
-      setTotalCount(
-        r.data.totalCount ?? (r.data.leads ? r.data.leads.length : 0)
-      );
+      setTotalCount(r.data.total || 0);
     } catch (err) {
       console.error(err);
       errorToast("Failed to fetch leads");
     }
-  }, [page, limit, q]);
+  }, [
+    page,
+    limit,
+    q,
+    status,
+    industry,
+    leadType,
+    leadSource,
+    aeoStatus,
+    rcmcStatus,
+  ]);
 
   useEffect(() => {
     fetchLeads();
   }, [fetchLeads]);
 
-  // client filtering on status & search (server search used but keep client safety)
-  // const filtered = useMemo(() => {
-  //   if (!Array.isArray(leads)) return [];
-  //   const query = q.trim().toLowerCase();
-  //   return leads.filter((l) => {
-  //     const hay = [
-  //       l.idNo,
-  //       l.name,
-  //       l.email,
-  //       l.mobileNo,
-  //       l.industry,
-  //       l.leadType,
-  //       l.leadStatus,
-  //       l.priorityRating,
-  //     ]
-  //       .join(" ")
-  //       .toLowerCase();
-  //     const matchQ = query ? hay.includes(query) : true;
-  //     const matchS = status ? l.leadStatus === status : true;
-  //     return matchQ && matchS;
-  //   });
-  // }, [leads, q, status]);
-
-  const filtered = useMemo(() => {
-    if (!Array.isArray(leads)) return [];
-
-    const query = q.trim().toLowerCase();
-
-    return leads.filter((l) => {
-      const hay = [
-        l.idNo,
-        l.name,
-        l.email,
-        l.mobileNo,
-        l.industry,
-        l.leadType,
-        l.leadSource,
-        l.RCMCPanel,
-        l.AEOStatus,
-        l.leadStatus,
-        l.priorityRating,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      const matchQ = query ? hay.includes(query) : true;
-
-      // INDIVIDUAL FILTER MATCHERS
-      const matchStatus = status ? l.leadStatus === status : true;
-      const matchAEO = aeoStatus ? l.AEOStatus === aeoStatus : true;
-      const matchRCMC = rcmcStatus ? l.RCMCPanel === rcmcStatus : true;
-      const matchIndustry = industry ? l.industry === industry : true;
-      const matchLeadType = leadType ? l.leadType === leadType : true;
-      const matchLeadSource = leadSource ? l.leadSource === leadSource : true;
-
-      return (
-        matchQ &&
-        matchStatus &&
-        matchAEO &&
-        matchRCMC &&
-        matchIndustry &&
-        matchLeadType &&
-        matchLeadSource
-      );
-    });
-  }, [leads, q, status, aeoStatus, rcmcStatus, industry, leadType, leadSource]);
-
   const sorted = useMemo(() => {
-    const data = [...filtered];
+    const data = [...leads];
     if (!sortField) return data;
+
     data.sort((a, b) => {
       const av = a[sortField] ?? "";
       const bv = b[sortField] ?? "";
-      // priority special sort
+
       if (sortField === "priorityRating") {
         const comp = (priorityOrder[av] ?? 99) - (priorityOrder[bv] ?? 99);
         return sortDir === "asc" ? comp : -comp;
       }
-      // createdAt date
+
       if (sortField === "createdAt") {
-        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        const da = new Date(a.createdAt).getTime();
+        const db = new Date(b.createdAt).getTime();
         return sortDir === "asc" ? da - db : db - da;
       }
-      // string compare
-      const sa = String(av).toLowerCase();
-      const sb = String(bv).toLowerCase();
-      if (sa === sb) return 0;
-      return sortDir === "asc" ? (sa > sb ? 1 : -1) : sa < sb ? 1 : -1;
+
+      return sortDir === "asc"
+        ? String(av).localeCompare(String(bv))
+        : String(bv).localeCompare(String(av));
     });
+
     return data;
-  }, [filtered, sortField, sortDir]);
+  }, [leads, sortField, sortDir]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -450,11 +400,6 @@ export default function LeadTable() {
   // helpers to render arrow
   const renderArrow = (field) =>
     sortField === field ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
-
-  // paginate UI calculations (server-driven but UI shows current)
-  // If your API returns totalCount, adjust totalPages accordingly.
-  // We'll assume server returns totalPages.
-
   return (
     <div className="space-y-4 p-4">
       <div className="flex justify-between items-center" ref={dropdownRef}>
@@ -621,7 +566,9 @@ export default function LeadTable() {
                     checked={selectAll}
                     onChange={(e) => {
                       setSelectAll(e.target.checked);
-                      setSelectedLeads(checked ? sorted.map((l) => l._id) : []);
+                      setSelectedLeads(
+                        e.target.checked ? sorted.map((l) => l._id) : []
+                      );
                     }}
                   />
                 </TableHead>

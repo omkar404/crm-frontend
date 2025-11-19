@@ -1,31 +1,3 @@
-// import React from "react";
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectContent,
-//   SelectItem,
-//   SelectValue,
-// } from "@/components/ui/select";
-
-// export default function LeadFilters({ status, setStatus, leadStatusList }) {
-//   return (
-//     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-//       <Select value={status} onValueChange={setStatus}>
-//         <SelectTrigger className="w-64">
-//           <SelectValue placeholder="Filter by Lead Status" />
-//         </SelectTrigger>
-//         <SelectContent>
-//           {leadStatusList.map((s) => (
-//             <SelectItem key={s} value={s}>
-//               {s}
-//             </SelectItem>
-//           ))}
-//         </SelectContent>
-//       </Select>
-//     </div>
-//   );
-// }
-
 import React from "react";
 import {
   Select,
@@ -36,118 +8,100 @@ import {
 } from "@/components/ui/select";
 
 export default function LeadFilters({
-  status,
-  setStatus,
-  leadStatusList,
-
-  aeoStatus,
-  setAeoStatus,
-  AEOStatusList,
-
-  rcmcStatus,
-  setRcmcStatus,
-  RCMCPanelList,
-
-  industry,
-  setIndustry,
-  industryList,
-
-  leadType,
-  setLeadType,
-  leadTypeList,
-
-  leadSource,
-  setLeadSource,
-  leadSourceList,
+  status, setStatus, leadStatusList,
+  aeoStatus, setAeoStatus, AEOStatusList,
+  rcmcStatus, setRcmcStatus, RCMCPanelList,
+  industry, setIndustry, industryList,
+  leadType, setLeadType, leadTypeList,
+  leadSource, setLeadSource, leadSourceList,
 }) {
+
+  // Clean any dirty imported value (fixes all filtering issues)
+  const normalize = (v) =>
+    typeof v === "string"
+      ? v.replace(/\r/g, "")
+          .replace(/\n/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+      : "";
+
+  // Clean + Sort + Deduplicate dropdown list
+  const prepareList = (list) => {
+    const cleaned = list
+      .map(normalize)
+      .filter((v) => v !== "")   // remove empties
+      .filter((v, i, arr) => arr.indexOf(v) === i); // unique
+    return cleaned.sort((a, b) => a.localeCompare(b));
+  };
+
+  // Prepare all lists once
+  const cleanLeadStatusList = prepareList(leadStatusList);
+  const cleanAEOList = prepareList(AEOStatusList);
+  const cleanRCMCList = prepareList(RCMCPanelList);
+  const cleanIndustryList = prepareList(industryList);
+  const cleanLeadTypeList = prepareList(leadTypeList);
+  const cleanLeadSourceList = prepareList(leadSourceList);
+
+  // Reusable Dropdown Component
+  const FilterDropdown = ({ label, value, onChange, list }) => (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent>
+        {list.map((item) => (
+          <SelectItem key={item} value={item}>
+            {item}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm grid grid-cols-3 gap-4">
 
-      {/* Lead Status */}
-      <Select value={status} onValueChange={setStatus}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Lead Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {leadStatusList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterDropdown
+        label="Lead Status"
+        value={status}
+        onChange={setStatus}
+        list={cleanLeadStatusList}
+      />
 
-      {/* AEO Status */}
-      <Select value={aeoStatus} onValueChange={setAeoStatus}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="AEO Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {AEOStatusList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterDropdown
+        label="AEO Status"
+        value={aeoStatus}
+        onChange={setAeoStatus}
+        list={cleanAEOList}
+      />
 
-      {/* RCMC Status */}
-      <Select value={rcmcStatus} onValueChange={setRcmcStatus}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="RCMC Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {RCMCPanelList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterDropdown
+        label="RCMC Status"
+        value={rcmcStatus}
+        onChange={setRcmcStatus}
+        list={cleanRCMCList}
+      />
 
-      {/* Industry */}
-      <Select value={industry} onValueChange={setIndustry}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Industry" />
-        </SelectTrigger>
-        <SelectContent>
-          {industryList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterDropdown
+        label="Industry"
+        value={industry}
+        onChange={setIndustry}
+        list={cleanIndustryList}
+      />
 
-      {/* Lead Type */}
-      <Select value={leadType} onValueChange={setLeadType}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Lead Type" />
-        </SelectTrigger>
-        <SelectContent>
-          {leadTypeList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterDropdown
+        label="Lead Type"
+        value={leadType}
+        onChange={setLeadType}
+        list={cleanLeadTypeList}
+      />
 
-      {/* Lead Source */}
-      <Select value={leadSource} onValueChange={setLeadSource}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Lead Source" />
-        </SelectTrigger>
-        <SelectContent>
-          {leadSourceList.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
+      <FilterDropdown
+        label="Lead Source"
+        value={leadSource}
+        onChange={setLeadSource}
+        list={cleanLeadSourceList}
+      />
     </div>
   );
 }
-

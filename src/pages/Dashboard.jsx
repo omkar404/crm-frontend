@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,101 +13,106 @@ import {
 } from "recharts";
 
 export default function Dashboard() {
-  const [leads, setLeads] = useState([]);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     api
-      .get("/api/auth/list")
-      .then((r) => {
-        const arr = Array.isArray(r.data.leads) ? r.data.leads : [];
-        setLeads(arr);
-      })
-      .catch(() => setLeads([]));
+      .get("/api/auth/dashboard-stats")
+      .then((r) => setStats(r.data))
+      .catch(() => setStats(null));
   }, []);
 
-  const stats = useMemo(() => {
-    const byStatus = {
-      NEW: 0,
-      CONTACTED: 0,
-      QUALIFIED: 0,
-      FAILED: 0,
-      CONVERTED: 0,
-    };
-
-    leads.forEach((l) => {
-      byStatus[l.status] = (byStatus[l.status] || 0) + 1;
-    });
-
-    return byStatus;
-  }, [leads]);
-
-  const chartData = useMemo(() => {
-    const map = {};
-    leads.forEach((l) => {
-      if (!l.createdAt) return;
-      const d = new Date(l.createdAt).toISOString().slice(0, 10);
-      map[d] = (map[d] || 0) + 1;
-    });
-
-    return Object.entries(map)
-      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-      .map(([date, count]) => ({ date, count }));
-  }, [leads]);
-
-  const Stat = ({ label, value }) => (
+  // ----------- Stat Card (Today, Week, Month, Year, Total) -----------
+  const StatCard = ({ label, value }) => (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-3xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );
 
+  if (!stats)
+    return (
+      <div className="p-6 text-center text-gray-500">
+        Loading dashboard...
+      </div>
+    );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-4">
+
+      {/* ---------- TOP STATS ---------- */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Stat label="New" value={stats.NEW} />
-        <Stat label="Contacted" value={stats.CONTACTED} />
-        <Stat label="Qualified" value={stats.QUALIFIED} />
-        <Stat label="Failed" value={stats.FAILED} />
-        <Stat label="Converted" value={stats.CONVERTED} />
+        <StatCard label="Today" value={stats.today} />
+        <StatCard label="This Week" value={stats.week} />
+        <StatCard label="This Month" value={stats.month} />
+        <StatCard label="This Year" value={stats.year} />
+        <StatCard label="Total Leads" value={stats.total} />
       </div>
 
+      {/* ---------- LEAD STATUS BREAKDOWN ---------- */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lead Status Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {stats.byStatus?.length === 0 && (
+            <div className="text-gray-500">No data available</div>
+          )}
+
+          {stats.byStatus?.map((s) => (
+            <div
+              key={s._id}
+              className="flex justify-between border-b py-1 text-sm"
+            >
+              <span>{s._id || "Unknown"}</span>
+              <strong>{s.count}</strong>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* ---------- LEADS OVER TIME CHART ---------- */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            Leads Over Time <Badge variant="secondary">Daily</Badge>
+            Leads Over Time <Badge variant="secondary">Last 30 Days</Badge>
           </CardTitle>
         </CardHeader>
 
         <CardContent>
-          <div className="h-64 min-h-[200px]">
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+              <AreaChart data={stats.last30days}>
                 <defs>
-                  <linearGradient id="color" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                  <linearGradient id="leadGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
+
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis dataKey="_id" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
+
                 <Area
                   type="monotone"
                   dataKey="count"
                   stroke="#3b82f6"
                   fillOpacity={1}
-                  fill="url(#color)"
+                  fill="url(#leadGradient)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
+
     </div>
   );
 }
+
