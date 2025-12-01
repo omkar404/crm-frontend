@@ -45,16 +45,16 @@ const priorityBorder = {
 const statusColors = {
   "Not Contacted": "bg-gray-100 text-gray-700",
   "Email Sent": "bg-blue-100 text-blue-700",
-  // "Contact on phone": "bg-yellow-100 text-yellow-700",
+  "Contact on phone": "bg-yellow-100 text-yellow-700",
   "In Contact": "bg-teal-100 text-teal-700",
   Interested: "bg-green-100 text-green-700",
   "In Process": "bg-orange-100 text-orange-700",
   "Login Created": "bg-purple-100 text-purple-700",
   "Do Not Touch": "bg-pink-100 text-pink-700",
-  // "Login Rejected": "bg-red-100 text-red-700",
-  // "Not Interested": "bg-red-200 text-red-800",
-  // "Not Contactable": "bg-gray-200 text-gray-800",
-  // "Spam / Fake Lead": "bg-black text-white",
+  "Login Rejected": "bg-red-100 text-red-700",
+  "Not Interested": "bg-red-200 text-red-800",
+  "Not Contactable": "bg-gray-200 text-gray-800",
+  "Spam / Fake Lead": "bg-black text-white",
 };
 
 const priorityOrder = { Premium: 0, High: 1, Medium: 2, Low: 3, "": 4 };
