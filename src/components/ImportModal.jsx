@@ -57,21 +57,41 @@ export default function ImportModal({ open, setOpen, onImported }) {
               Drag & drop your Excel/CSV file here or{" "}
               <label className="text-blue-600 cursor-pointer">
                 browse
-                <input type="file" accept=".xlsx,.csv" onChange={handleFileSelect} className="hidden" />
+                <input
+                  type="file"
+                  accept=".xlsx,.csv"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
               </label>
             </p>
           )}
         </div>
 
         <div className="flex justify-between mt-4">
-          <a href="https://crm-backend-6aw1.onrender.com/api/auth/sample" download className="text-blue-600 underline text-sm">
+          {/* <a href="https://crm-backend-6aw1.onrender.com/api/auth/sample" download className="text-blue-600 underline text-sm"> */}
+          <a
+            href="https://api.eximinq.co.in/api/auth/sample"
+            download
+            className="text-blue-600 underline text-sm"
+          >
             Download Sample File
           </a>
           <div className="space-x-2">
-            <Button variant="outline" onClick={() => { setFile(null); setOpen(false); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFile(null);
+                setOpen(false);
+              }}
+            >
               Cancel
             </Button>
-            <Button disabled={!file || uploading} onClick={handleUpload} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              disabled={!file || uploading}
+              onClick={handleUpload}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               {uploading ? "Uploading..." : "Upload"}
             </Button>
           </div>
