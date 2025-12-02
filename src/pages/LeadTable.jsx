@@ -45,6 +45,8 @@ const priorityBorder = {
 const statusColors = {
   "Not Contacted": "bg-gray-100 text-gray-700",
   "Email Sent": "bg-blue-100 text-blue-700",
+  "Visit Scheduled":"bg-pink-100 text-pink-700",
+  "Email id incorrect":"bg-red-100 text-red-700",
   "Contact on phone": "bg-yellow-100 text-yellow-700",
   "In Contact": "bg-teal-100 text-teal-700",
   Interested: "bg-green-100 text-green-700",

@@ -7,6 +7,8 @@ import StatusPieChart from "../components/StatusPieChart";
 const STATUS_CATEGORIES = [
   "Not Contacted",
   "Email Sent",
+  "Visit Scheduled",
+  "Email id incorrect",
   "Contact on phone",
   "In Contact",
   "Interested",

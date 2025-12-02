@@ -123,6 +123,8 @@ export default function LeadFormModal({
   const leadStatusList = [
     "Not Contacted",
     "Email Sent",
+    "Visit Scheduled",
+    "Email id incorrect",
     "Contact on phone",
     "In Contact",
     "Interested",
