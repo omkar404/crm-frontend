@@ -56,6 +56,7 @@ export default function LeadFormModal({
   editLead,
   onSaved,
   viewMode,
+  setViewMode,
 }) {
   const [activeTab, setActiveTab] = useState("basic");
   const [form, setForm] = useState(emptyForm);
@@ -137,15 +138,44 @@ export default function LeadFormModal({
     "Do Not Touch",
   ];
   const stateList = [
-    "Maharashtra",
+    "Andaman and Nicobar Islands",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chandigarh",
+    "Chhattisgarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi (National Capital Territory of Delhi)",
+    "Goa",
     "Gujarat",
-    "Delhi",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jammu and Kashmir",
+    "Jharkhand",
     "Karnataka",
-    "Tamil Nadu",
+    "Kerala",
+    "Ladakh",
+    "Lakshadweep",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Puducherry",
+    "Punjab",
     "Rajasthan",
-    "UP",
-    "MP",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
   ];
+
   const industryList = [
     "Agriculture, Forestry, and Fishing",
     "Coal and lignite",
@@ -165,7 +195,7 @@ export default function LeadFormModal({
 
   const RCMC_MAP = {
     FIEO: ["FIEO - FEDERATION"],
-    EPC: ["EEPC - ENGINEERING"],
+    EEPC: ["EEPC - ENGINEERING"],
     APPARELS: [
       "AEPC - APPAREL",
       "TEXPROCIL - TEXTILE",
@@ -809,6 +839,22 @@ export default function LeadFormModal({
             )}
           </TabsContent>
         </Tabs>
+
+        {viewMode && activeTab === "basic" && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 px-12 shadow-xl"
+              onClick={() => {
+                // ONLY THIS — no close/reopen hacks
+                setActiveTab("basic");
+                setViewMode(false);
+              }}
+            >
+              Edit Lead
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

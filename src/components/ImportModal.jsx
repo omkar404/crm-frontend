@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { successToast, errorToast } from "@/utils/customToast";
 import api from "../api/axios";
-
+// i want to validate alert as i given to the backend as user can get what type of error it is
 export default function ImportModal({ open, setOpen, onImported }) {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -19,26 +19,94 @@ export default function ImportModal({ open, setOpen, onImported }) {
     if (f) setFile(f);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("file", file);
-    try {
-      setUploading(true);
-      const res = await api.post("api/auth/import", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      successToast(res.data.message || "Imported successfully");
-      setFile(null);
-      setOpen(false);
-      onImported();
-    } catch (err) {
-      console.error(err);
-      errorToast(err?.response?.data?.error || "Failed to import");
-    } finally {
-      setUploading(false);
+  const getSkipReasonsSummary = (skippedDetails = []) => {
+  const reasonSet = new Set();
+
+  skippedDetails.forEach(row => {
+    row.reasons.forEach(r => reasonSet.add(r));
+  });
+
+  return Array.from(reasonSet);
+};
+
+
+  // const handleUpload = async () => {
+  //   if (!file) return;
+  //   const fd = new FormData();
+  //   fd.append("file", file);
+  //   try {
+  //     setUploading(true);
+  //     const res = await api.post("api/auth/import", fd, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
+  //     successToast(res.data.message || "Imported successfully");
+  //     setFile(null);
+  //     setOpen(false);
+  //     onImported();
+  //   } catch (err) {
+  //     console.error(err);
+  //     errorToast(err?.response?.data?.error || "Failed to import");
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
+
+const handleUpload = async () => {
+  if (!file) {
+    errorToast("Please select an Excel file");
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    setUploading(true);
+
+    const res = await api.post("api/auth/import", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    const { imported, skipped, skippedDetails } = res.data;
+
+    if (imported > 0 && skipped === 0) {
+      successToast(`Successfully imported ${imported} leads`);
     }
-  };
+
+    else if (imported > 0 && skipped > 0) {
+      const reasons = getSkipReasonsSummary(skippedDetails);
+      successToast(
+        `Imported ${imported}, skipped ${skipped}. Reasons: ${reasons.join(", ")}`
+      );
+    }
+
+    else if (imported === 0 && skipped > 0) {
+      const reasons = getSkipReasonsSummary(skippedDetails);
+      errorToast(
+        `All rows skipped (${skipped}). Reason: ${reasons.join(", ")}`
+      );
+    }
+
+    else {
+      errorToast("Nothing was imported");
+    }
+
+    setFile(null);
+    setOpen(false);
+    onImported?.();
+
+  } catch (err) {
+    console.error(err);
+    errorToast(
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to import file"
+    );
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

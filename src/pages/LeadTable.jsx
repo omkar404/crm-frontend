@@ -45,8 +45,8 @@ const priorityBorder = {
 const statusColors = {
   "Not Contacted": "bg-gray-100 text-gray-700",
   "Email Sent": "bg-blue-100 text-blue-700",
-  "Visit Scheduled":"bg-pink-100 text-pink-700",
-  "Email id incorrect":"bg-red-100 text-red-700",
+  "Visit Scheduled": "bg-pink-100 text-pink-700",
+  "Email id incorrect": "bg-red-100 text-red-700",
   "Contact on phone": "bg-yellow-100 text-yellow-700",
   "In Contact": "bg-teal-100 text-teal-700",
   Interested: "bg-green-100 text-green-700",
@@ -65,7 +65,7 @@ const priorityOrder = { Premium: 0, High: 1, Medium: 2, Low: 3, "": 4 };
 const AEOStatusList = ["NA", "AEO - T1", "AEO - T2", "AEO - T3", "AEO - LEO"];
 const RCMCPanelList = [
   "FIEO",
-  "EPC",
+  "EEPC",
   "APPARELS",
   "CHEMICALS/PLASTIC",
   "Pharmaceuticals",
@@ -208,11 +208,13 @@ export default function LeadTable() {
 
   const handleBulkStatusUpdate = async () => {
     const { value: status } = await Swal.fire({
-      title: "Update Status",
+      title: "Update Status", 
       input: "select",
       inputOptions: {
         "Not Contacted": "Not Contacted",
         "Email Sent": "Email Sent",
+        "Visit Scheduled": "Visit Scheduled",
+        "Email id incorrect": "Email id incorrect",
         "Contact on phone": "Contact on phone",
         "In Contact": "In Contact",
         Interested: "Interested",
@@ -549,6 +551,7 @@ export default function LeadTable() {
         setOpen={setOpen}
         editLead={editLead}
         viewMode={viewMode}
+        setViewMode={setViewMode}
         onSaved={fetchLeads}
       />
       <ImportModal
@@ -588,6 +591,9 @@ export default function LeadTable() {
                     {renderArrow("name")}
                   </span>
                 </TableHead>
+
+                {/* Website */}
+                <TableHead>Website</TableHead>
 
                 <TableHead
                   className="cursor-pointer"
@@ -708,6 +714,26 @@ export default function LeadTable() {
                             __html: highlight(l.name || "", q),
                           }}
                         />
+                      </TableCell>
+
+                      <TableCell>
+                        {l.website ? (
+                          <a
+                            href={
+                              l.website.startsWith("http")
+                                ? l.website
+                                : `https://${l.website}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {l.website}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
 
                       <TableCell>
