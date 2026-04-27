@@ -3,8 +3,8 @@ import Cookies from "js-cookie";
 
 const api = axios.create({
   // baseURL: "https://crm-backend-6aw1.onrender.com/",
-  baseURL: "https://api.eximinq.co.in/",
-  // baseURL: "http://localhost:5000/",
+  // baseURL: "https://api.eximinq.co.in/",
+  baseURL: "http://localhost:5000/",
   withCredentials: false,
 });
 
