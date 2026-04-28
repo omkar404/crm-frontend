@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { successToast, errorToast } from "@/utils/customToast";
 import api from "../api/axios";
+import { CITY_OPTIONS, CITY_STATE_MAP } from "../constants/locationOptions";
 
 const emptyForm = {
   idNo: "",
@@ -138,43 +139,8 @@ export default function LeadFormModal({
     "Do Not Touch",
   ];
   const stateList = [
-    "Andaman and Nicobar Islands",
-    "Andhra Pradesh",
-    "Arunachal Pradesh",
-    "Assam",
-    "Bihar",
-    "Chandigarh",
-    "Chhattisgarh",
-    "Dadra and Nagar Haveli and Daman and Diu",
-    "Delhi (National Capital Territory of Delhi)",
-    "Goa",
-    "Gujarat",
-    "Haryana",
-    "Himachal Pradesh",
-    "Jammu and Kashmir",
-    "Jharkhand",
-    "Karnataka",
-    "Kerala",
-    "Ladakh",
-    "Lakshadweep",
-    "Madhya Pradesh",
-    "Maharashtra",
-    "Manipur",
-    "Meghalaya",
-    "Mizoram",
-    "Nagaland",
-    "Odisha",
-    "Puducherry",
-    "Punjab",
-    "Rajasthan",
-    "Sikkim",
-    "Tamil Nadu",
-    "Telangana",
-    "Tripura",
-    "Uttar Pradesh",
-    "Uttarakhand",
-    "West Bengal",
-  ];
+    ...new Set(Object.values(CITY_STATE_MAP)),
+  ].sort((a, b) => a.localeCompare(b));
 
   const industryList = [
     "Agriculture, Forestry, and Fishing",
@@ -311,6 +277,19 @@ export default function LeadFormModal({
     return INDUSTRY_MAP[industry] || [];
   };
 
+  const cityOptions = useMemo(
+    () => (form.city && !CITY_OPTIONS.includes(form.city) ? [form.city, ...CITY_OPTIONS] : CITY_OPTIONS),
+    [form.city]
+  );
+
+  const handleCityChange = (city) => {
+    setForm((prev) => ({
+      ...prev,
+      city,
+      state: CITY_STATE_MAP[city] || prev.state,
+    }));
+  };
+
   // helper to get options (returns array)
   const getRCMCTypesForPanel = (panel) => {
     if (!panel) return [];
@@ -336,15 +315,10 @@ export default function LeadFormModal({
       }
 
       if (editLead) {
-        await api.put(`api/auth/update/${editLead._id}`, clean);
+        await api.put(`/api/auth/${editLead._id}`, clean);
         successToast("Lead updated successfully!");
       } else {
-        const generatedId = `LEAD-${Date.now()}`;
-        await api.post("api/auth/create", {
-          ...clean,
-          idNo: generatedId,
-          idDate: new Date(),
-        });
+        await api.post("/api/auth", clean);
         successToast("Lead created successfully!");
       }
       setOpen(false);
@@ -384,6 +358,7 @@ export default function LeadFormModal({
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="mt-1"
+                  placeholder="Enter company or lead name"
                 />
               </div>
 
@@ -398,6 +373,7 @@ export default function LeadFormModal({
                     setForm({ ...form, mobileNo: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter mobile number"
                 />
               </div>
 
@@ -411,6 +387,7 @@ export default function LeadFormModal({
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="mt-1"
+                  placeholder="Enter email address"
                 />
               </div>
 
@@ -423,6 +400,7 @@ export default function LeadFormModal({
                     setForm({ ...form, landlineNo: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter landline number"
                 />
               </div>
 
@@ -435,6 +413,7 @@ export default function LeadFormModal({
                     setForm({ ...form, website: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter website URL"
                 />
               </div>
 
@@ -447,6 +426,7 @@ export default function LeadFormModal({
                     setForm({ ...form, iecChaNo: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter IEC / CHA number"
                 />
               </div>
 
@@ -459,17 +439,22 @@ export default function LeadFormModal({
                   onChange={(e) =>
                     setForm({ ...form, address: e.target.value })
                   }
+                  placeholder="Enter complete address"
                 />
               </div>
 
               <div>
                 <Label>City</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="mt-1"
-                />
+                {viewMode ? (
+                  <Input disabled value={form.city} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.city,
+                    handleCityChange,
+                    cityOptions,
+                    "Select City"
+                  )
+                )}
               </div>
 
               <div>
@@ -481,7 +466,7 @@ export default function LeadFormModal({
                     form.state,
                     (v) => setForm({ ...form, state: v }),
                     stateList,
-                    "Select State"
+                    "Auto-selected from city"
                   )
                 )}
               </div>
@@ -495,6 +480,7 @@ export default function LeadFormModal({
                     setForm({ ...form, pinCode: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter pin code"
                 />
               </div>
 
@@ -507,6 +493,7 @@ export default function LeadFormModal({
                     setForm({ ...form, contactPerson: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter contact person"
                 />
               </div>
 
@@ -519,6 +506,7 @@ export default function LeadFormModal({
                     setForm({ ...form, designation: e.target.value })
                   }
                   className="mt-1"
+                  placeholder="Enter designation"
                 />
               </div>
 
@@ -667,6 +655,7 @@ export default function LeadFormModal({
                   }
                   type="number"
                   className="mt-1"
+                  placeholder="Enter employee count"
                 />
               </div>
 
@@ -805,6 +794,7 @@ export default function LeadFormModal({
                   className="w-full border rounded-md p-2 mt-1"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Add internal notes"
                 />
               </div>
 
@@ -817,6 +807,7 @@ export default function LeadFormModal({
                   onChange={(e) =>
                     setForm({ ...form, description: e.target.value })
                   }
+                  placeholder="Add lead description"
                 />
               </div>
             </div>

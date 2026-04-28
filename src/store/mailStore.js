@@ -184,7 +184,42 @@ import {
   fetchMailSummary,
   fetchDailySummary,
   exportMailLeadsCSV,
+  fetchFilterOptions,
 } from "../api/mailApi";
+
+const MAIL_EXPORT_HEADERS = [
+  "Sr No",
+  "name",
+  "Email Id",
+  "Template",
+  "Subject",
+  "Date",
+  "IP Address",
+  "Web",
+  "email",
+  "email verified",
+  "city",
+  "Email sent",
+  "Status",
+  "state",
+  "pinCode",
+  "contactPerson",
+  "designation",
+  "employees",
+  "turnover",
+  "startupCategory",
+  "AEOStatus",
+  "RCMCPanel",
+  "RCMCType",
+  "industry",
+  "industryBrief",
+  "leadType",
+  "priorityRating",
+  "leadSource",
+  "leadStatus",
+  "description",
+  "notes",
+];
 
 let searchTimer = null;
 const debounce = (fn, delay = 500) => {
@@ -214,7 +249,7 @@ const useMailStore = create((set, get) => ({
   search: "",
 
   // filter states
-  sendEmailId: "",
+  sendEmailId: [],
   templateType: "",
   templateSubject: "",
   emailDate: "",
@@ -236,8 +271,10 @@ const useMailStore = create((set, get) => ({
     emailSentType: [],
     status: [],
   },
+  filterOptionsLoaded: false,
 
   filterOptionsLoading: false,
+  latestListRequestId: 0,
 
   selectedIds: [],
   isFormModalOpen: false,
@@ -251,7 +288,8 @@ const useMailStore = create((set, get) => ({
   // loadLeads (respects all active filters)
   loadLeads: async () => {
     const state = get();
-    set({ loading: true, error: null });
+    const requestId = state.latestListRequestId + 1;
+    set({ loading: true, error: null, latestListRequestId: requestId });
     try {
       const res = await fetchMailLeads({
         page: state.page,
@@ -266,11 +304,24 @@ const useMailStore = create((set, get) => ({
         emailVerified: state.emailVerified,
         emailSentType: state.emailSentType,
         status: state.statusFilter,
+        includeFilters: !state.filterOptionsLoaded,
       });
-      set({ leads: res.data || [], total: res.total || 0, loading: false });
+      if (get().latestListRequestId !== requestId) {
+        return;
+      }
+
+      set({
+        leads: res.data || [],
+        total: res.total || 0,
+        loading: false,
+        filterOptions: res.filterOptions || state.filterOptions,
+        filterOptionsLoaded: Boolean(res.filterOptions) || state.filterOptionsLoaded,
+      });
     } catch (err) {
       console.error("loadLeads error:", err);
-      set({ error: err.message, loading: false });
+      if (get().latestListRequestId === requestId) {
+        set({ error: err.message, loading: false });
+      }
     }
   },
 
@@ -285,7 +336,7 @@ const useMailStore = create((set, get) => ({
   },
 
   // filter setters (each triggers reload)
-  setSendEmailId: (value) => { set({ sendEmailId: value, page: 1 }); get().loadLeads(); },
+  setSendEmailId: (value) => { set({ sendEmailId: Array.isArray(value) ? value : [], page: 1 }); get().loadLeads(); },
   setTemplateType: (value) => { set({ templateType: value, page: 1 }); get().loadLeads(); },
   setTemplateSubject: (value) => { set({ templateSubject: value, page: 1 }); get().loadLeads(); },
   setEmailDate: (value) => { set({ emailDate: value, page: 1 }); get().loadLeads(); },
@@ -297,7 +348,7 @@ const useMailStore = create((set, get) => ({
 
   clearFilters: () => {
     set({
-      sendEmailId: "",
+      sendEmailId: [],
       templateType: "",
       templateSubject: "",
       emailDate: "",
@@ -313,15 +364,13 @@ const useMailStore = create((set, get) => ({
 
   // load filter options from backend
   loadFilterOptions: async () => {
+    if (get().filterOptionsLoaded) {
+      return;
+    }
     set({ filterOptionsLoading: true });
     try {
-      const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-      const token = localStorage.getItem("token") || "";
-      const res = await fetch(`${BASE_URL}/api/mail/filter-options`, {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      set({ filterOptions: data, filterOptionsLoading: false });
+      const data = await fetchFilterOptions();
+      set({ filterOptions: data, filterOptionsLoading: false, filterOptionsLoaded: true });
     } catch (err) {
       console.error("Filter options error:", err);
       set({ filterOptionsLoading: false });
@@ -345,23 +394,88 @@ const useMailStore = create((set, get) => ({
   updateLead: async (id, payload) => { await updateMailLead(id, payload); get().loadLeads(); },
   deleteLead: async (id) => { await deleteMailLead(id); get().loadLeads(); },
 
+  loadSummary: async () => {
+    set({ summaryLoading: true, error: null });
+    try {
+      const [summary, daily] = await Promise.all([
+        fetchMailSummary(),
+        fetchDailySummary(7),
+      ]);
+      set({
+        summary: summary?.data || summary,
+        dailySummary: daily?.data || daily || [],
+        summaryLoading: false,
+      });
+    } catch (err) {
+      console.error("loadSummary error:", err);
+      set({ error: err.message, summaryLoading: false });
+    }
+  },
+
   // export CSV with formatted date column
   exportCSV: async () => {
-    const { search, statusFilter } = get();
-    let data = await exportMailLeadsCSV({ search, status: statusFilter });
+    const {
+      search,
+      sendEmailId,
+      templateType,
+      templateSubject,
+      emailDate,
+      ipAddress,
+      webTabAndType,
+      emailVerified,
+      emailSentType,
+      statusFilter,
+    } = get();
+    let data = await exportMailLeadsCSV({
+      search,
+      sendEmailId,
+      templateType,
+      templateSubject,
+      emailDate,
+      ipAddress,
+      webTabAndType,
+      emailVerified,
+      emailSentType,
+      status: statusFilter,
+    });
     if (!data.length) return;
 
-    data = data.map(row => {
-      if (row.Date && typeof row.Date === 'number') {
-        row.Date = formatExcelDate(row.Date);
-      }
-      return row;
+    data = data.map((row, index) => {
+      const mapped = {};
+
+      MAIL_EXPORT_HEADERS.forEach((header) => {
+        let value = row[header] ?? "";
+
+        if (header === "Sr No") {
+          value = row[header] || index + 1;
+        }
+
+        if (header === "Date" && value) {
+          if (typeof value === "number") {
+            value = formatExcelDate(value);
+          } else {
+            const date = new Date(value);
+            if (!Number.isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, "0");
+              const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+              const month = monthNames[date.getMonth()];
+              const year = date.getFullYear().toString().slice(-2);
+              value = `${day}-${month}-${year}`;
+            }
+          }
+        }
+
+        mapped[header] = value;
+      });
+
+      return mapped;
     });
 
-    const keys = Object.keys(data[0]);
     const csv = [
-      keys.join(","),
-      ...data.map(row => keys.map(k => `"${String(row[k] ?? "").replace(/"/g, '""')}"`).join(",")),
+      MAIL_EXPORT_HEADERS.join(","),
+      ...data.map((row) =>
+        MAIL_EXPORT_HEADERS.map((header) => `"${String(row[header] ?? "").replace(/"/g, '""')}"`).join(",")
+      ),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });

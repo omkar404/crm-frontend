@@ -154,6 +154,15 @@ export default function LeadTable() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [filterOptions, setFilterOptions] = useState({
+    industry: industryList,
+    leadType: leadTypeList,
+    leadSource: leadSourceList,
+    leadStatus: Object.keys(statusColors),
+    AEOStatus: AEOStatusList,
+    RCMCPanel: RCMCPanelList,
+  });
+  const [filterOptionsLoaded, setFilterOptionsLoaded] = useState(false);
 
   //filter
   const [status, setStatus] = useState("");
@@ -284,12 +293,20 @@ export default function LeadTable() {
           leadSource: leadSource,
           AEOStatus: aeoStatus,
           RCMCPanel: rcmcStatus,
+          includeFilters: !filterOptionsLoaded,
         },
       });
 
       setLeads(Array.isArray(r.data.leads) ? r.data.leads : []);
       setTotalPages(r.data.totalPages || 1);
       setTotalCount(r.data.total || 0);
+      if (r.data.filterOptions) {
+        setFilterOptions((prev) => ({
+          ...prev,
+          ...r.data.filterOptions,
+        }));
+        setFilterOptionsLoaded(true);
+      }
     } catch (err) {
       console.error(err);
       errorToast("Failed to fetch leads");
@@ -527,22 +544,22 @@ export default function LeadTable() {
         <LeadFilters
           status={status}
           setStatus={setStatus}
-          leadStatusList={Object.keys(statusColors)}
+          leadStatusList={filterOptions.leadStatus || Object.keys(statusColors)}
           aeoStatus={aeoStatus}
           setAeoStatus={setAeoStatus}
-          AEOStatusList={AEOStatusList}
+          AEOStatusList={filterOptions.AEOStatus || AEOStatusList}
           rcmcStatus={rcmcStatus}
           setRcmcStatus={setRcmcStatus}
-          RCMCPanelList={RCMCPanelList}
+          RCMCPanelList={filterOptions.RCMCPanel || RCMCPanelList}
           industry={industry}
           setIndustry={setIndustry}
-          industryList={industryList}
+          industryList={filterOptions.industry || industryList}
           leadType={leadType}
           setLeadType={setLeadType}
-          leadTypeList={leadTypeList}
+          leadTypeList={filterOptions.leadType || leadTypeList}
           leadSource={leadSource}
           setLeadSource={setLeadSource}
-          leadSourceList={leadSourceList}
+          leadSourceList={filterOptions.leadSource || leadSourceList}
         />
       )}
 
@@ -558,6 +575,7 @@ export default function LeadTable() {
         open={importModalOpen}
         setOpen={setImportModalOpen}
         onImported={fetchLeads}
+        entity="leads"
       />
 
       {/* TABLE CONTAINER: parent MUST have overflow for sticky header to work */}
