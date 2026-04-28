@@ -1,68 +1,145 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem
+    --background: 36 33% 96%;
+    --foreground: 206 26% 14%;
+    --card: 40 43% 98%;
+    --card-foreground: 206 26% 14%;
+    --popover: 40 43% 98%;
+    --popover-foreground: 206 26% 14%;
+    --primary: 173 77% 26%;
+    --primary-foreground: 40 43% 98%;
+    --secondary: 45 26% 92%;
+    --secondary-foreground: 206 26% 18%;
+    --muted: 38 20% 92%;
+    --muted-foreground: 207 13% 42%;
+    --accent: 25 55% 50%;
+    --accent-foreground: 40 43% 98%;
+    --destructive: 0 63% 47%;
+    --destructive-foreground: 40 43% 98%;
+    --border: 35 22% 82%;
+    --input: 35 22% 82%;
+    --ring: 173 77% 26%;
+    --chart-1: 173 77% 26%;
+    --chart-2: 24 56% 50%;
+    --chart-3: 206 26% 20%;
+    --chart-4: 45 76% 45%;
+    --chart-5: 143 49% 39%;
+    --radius: 1.1rem;
   }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
-  }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at top left, rgba(15, 118, 110, 0.11), transparent 32%),
+      radial-gradient(circle at bottom right, rgba(201, 111, 59, 0.10), transparent 28%),
+      linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(246, 244, 239, 1));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Manrope", "Segoe UI", sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  ::selection {
+    background: rgba(15, 118, 110, 0.2);
+  }
+}
+
+@layer components {
+  .crm-panel {
+    @apply rounded-[28px] border border-white/60 bg-white/70 shadow-[0_30px_80px_rgba(22,32,42,0.12)] backdrop-blur-xl;
+  }
+
+  .crm-card {
+    @apply rounded-[24px] border border-white/70 bg-white/85 shadow-[0_18px_50px_rgba(22,32,42,0.08)] backdrop-blur;
+  }
+
+  .crm-mesh {
+    background-image:
+      linear-gradient(rgba(22, 32, 42, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22, 32, 42, 0.04) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+
+  .crm-fade-up {
+    animation: crmFadeUp 0.7s ease both;
+  }
+
+  .crm-float {
+    animation: crmFloat 8s ease-in-out infinite;
+  }
+
+  .crm-float-delayed {
+    animation: crmFloat 10s ease-in-out infinite 1.2s;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(217, 211, 199, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(94, 106, 115, 0.45);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(94, 106, 115, 0.65);
+}
+
+@keyframes crmFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes crmFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -12px, 0);
   }
 }

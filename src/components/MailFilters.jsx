@@ -1,297 +1,236 @@
-// import React, { useRef, useEffect } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Label } from "@/components/ui/label";
-// import {
-//   Select, SelectTrigger, SelectContent, SelectItem, SelectValue,
-// } from "@/components/ui/select";
-// import useMailStore from "../store/mailStore";
-
-// export default function MailFilters({ onClose }) {
-//   const ref = useRef(null);
-
-//   const {
-//     sendEmailId, setSendEmailId,
-//     templateType, setTemplateType,
-//     templateSubject, setTemplateSubject,
-//     emailDate, setEmailDate,
-//     ipAddress, setIpAddress,
-//     webTabAndType, setWebTabAndType,
-//     emailVerified, setEmailVerified,
-//     emailSentType, setEmailSentType,
-//     statusFilter, setStatusFilter,
-//     clearFilters,
-//     filterOptions,
-//     loadFilterOptions,
-//   } = useMailStore();
-
-//   useEffect(() => {
-//     loadFilterOptions();
-//   }, []);
-
-//   // Prevent closing when clicking inside any Radix Select portal
-//   useEffect(() => {
-//     const handler = (e) => {
-//       if (ref.current && ref.current.contains(e.target)) return;
-//       if (e.target.closest('[data-radix-select-content]')) return;
-//       if (e.target.closest('[data-radix-select-trigger]')) return;
-//       onClose();
-//     };
-//     document.addEventListener("mousedown", handler);
-//     return () => document.removeEventListener("mousedown", handler);
-//   }, [onClose]);
-
-//   const FilterDropdown = ({ label, value, onChange, options, placeholder = "All" }) => (
-//     <div>
-//       <Label className="text-xs text-gray-500 mb-1 block">{label}</Label>
-//       <Select
-//         value={value || "__all__"}
-//         onValueChange={(val) => onChange(val === "__all__" ? "" : val)}
-//       >
-//         <SelectTrigger className="w-full">
-//           <SelectValue placeholder={placeholder} />
-//         </SelectTrigger>
-//         <SelectContent>
-//           <SelectItem value="__all__">{placeholder}</SelectItem>
-//           {options.map((opt) => (
-//             <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-//           ))}
-//         </SelectContent>
-//       </Select>
-//     </div>
-//   );
-
-//   return (
-//     <div
-//       ref={ref}
-//       className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-4 z-50"
-//     >
-//       <FilterDropdown label="Send Email ID" value={sendEmailId} onChange={setSendEmailId} options={filterOptions.sendEmailId || []} />
-//       <FilterDropdown label="Template Type" value={templateType} onChange={setTemplateType} options={filterOptions.templateType || []} />
-//       <FilterDropdown label="Template Subject" value={templateSubject} onChange={setTemplateSubject} options={filterOptions.templateSubject || []} />
-//       <FilterDropdown label="Email Date" value={emailDate} onChange={setEmailDate} options={filterOptions.emailDate || []} />
-//       <FilterDropdown label="IP Address" value={ipAddress} onChange={setIpAddress} options={filterOptions.ipAddress || []} />
-//       <FilterDropdown label="Web Tab & Type" value={webTabAndType} onChange={setWebTabAndType} options={filterOptions.webTabAndType || []} />
-//       <FilterDropdown label="Email Verified" value={emailVerified} onChange={setEmailVerified} options={filterOptions.emailVerified || []} />
-//       <FilterDropdown label="Email Sent Type" value={emailSentType} onChange={setEmailSentType} options={filterOptions.emailSentType || []} />
-//       <FilterDropdown label="Status" value={statusFilter} onChange={setStatusFilter} options={filterOptions.status || []} />
-
-//       <div className="col-span-1 md:col-span-3 flex justify-end gap-2 mt-2">
-//         <Button variant="outline" onClick={() => { clearFilters(); onClose(); }}>Clear All</Button>
-//         <Button className="bg-blue-600 hover:bg-blue-700" onClick={onClose}>Apply</Button>
-//       </div>
-//     </div>
-//   );
-// }
-
-// import React from "react";
-// import useMailStore from "../store/mailStore";
-
-// export default function MailFilters({ onClose }) {
-//   const {
-//     sendEmailId, setSendEmailId, filterOptions,
-//     templateType, setTemplateType,
-//     templateSubject, setTemplateSubject,
-//     emailDate, setEmailDate,
-//     ipAddress, setIpAddress,
-//     webTabAndType, setWebTabAndType,
-//     emailVerified, setEmailVerified,
-//     emailSentType, setEmailSentType,
-//     statusFilter, setStatusFilter,
-//     loadLeads,
-//     setPage,
-//   } = useMailStore();
-
-//   // ✅ APPLY FILTER
-//   const handleApply = () => {
-//     setPage(1);
-//     loadLeads();   // 🔥 important
-//     onClose();
-//   };
-
-//   // ✅ CLEAR FILTER
-//   const handleClear = () => {
-//     setSendEmailId("");
-//     setTemplateType("");
-//     setTemplateSubject("");
-//     setEmailDate("");
-//     setIpAddress("");
-//     setWebTabAndType("");
-//     setEmailVerified("");
-//     setEmailSentType("");
-//     setStatusFilter("");
-
-//     setPage(1);
-//     loadLeads();   // 🔥 reset data
-//   };
-
-//   return (
-//     <div className="bg-gray-100 p-4 rounded-lg shadow-md space-y-4">
-
-//       {/* FILTER GRID */}
-//       <div className="grid grid-cols-3 gap-3">
-
-//         <select value={sendEmailId} onChange={(e) => setSendEmailId(e.target.value)}>
-//           <option value="">Send Email ID</option>
-//           {filterOptions.sendEmailId.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={templateType} onChange={(e) => setTemplateType(e.target.value)}>
-//           <option value="">Template Type</option>
-//           {filterOptions.templateType.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={templateSubject} onChange={(e) => setTemplateSubject(e.target.value)}>
-//           <option value="">Template Subject</option>
-//           {filterOptions.templateSubject.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={emailDate} onChange={(e) => setEmailDate(e.target.value)}>
-//           <option value="">Email Date</option>
-//           {filterOptions.emailDate.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={ipAddress} onChange={(e) => setIpAddress(e.target.value)}>
-//           <option value="">IP Address</option>
-//           {filterOptions.ipAddress.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={webTabAndType} onChange={(e) => setWebTabAndType(e.target.value)}>
-//           <option value="">Web Tab & Type</option>
-//           {filterOptions.webTabAndType.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={emailVerified} onChange={(e) => setEmailVerified(e.target.value)}>
-//           <option value="">Email Verified</option>
-//           {filterOptions.emailVerified.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={emailSentType} onChange={(e) => setEmailSentType(e.target.value)}>
-//           <option value="">Email Sent Type</option>
-//           {filterOptions.emailSentType.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-//           <option value="">Status</option>
-//           {filterOptions.status.map((v, i) => <option key={i}>{v}</option>)}
-//         </select>
-
-//       </div>
-
-//       {/* ✅ BUTTONS */}
-//       <div className="flex justify-end gap-3 pt-2">
-//         <button
-//           onClick={handleClear}
-//           className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-//         >
-//           Clear All
-//         </button>
-
-//         <button
-//           onClick={handleApply}
-//           className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-//         >
-//           Apply Filters
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-import React from "react";
+import React, { useMemo, useState } from "react";
 import useMailStore from "../store/mailStore";
 
-// Convert "DD-MM-YYYY" → "DD-MMM-YY" (e.g., 09-02-2026 → 09-Feb-26)
-const formatDateToDDMMMYY = (dateStr) => {
-  if (!dateStr || typeof dateStr !== 'string') return dateStr;
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  const [day, month, year] = parts;
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const monthAbbr = monthNames[parseInt(month) - 1];
-  const shortYear = year.slice(-2);
-  return `${day.padStart(2, '0')}-${monthAbbr}-${shortYear}`;
-};
+function MultiSelectEmailFilter({ label, options, selectedValues, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
-export default function MailFilters({ onClose }) {
-  const {
-    sendEmailId, setSendEmailId, filterOptions,
-    templateType, setTemplateType,
-    templateSubject, setTemplateSubject,
-    emailDate, setEmailDate,
-    ipAddress, setIpAddress,
-    webTabAndType, setWebTabAndType,
-    emailVerified, setEmailVerified,
-    emailSentType, setEmailSentType,
-    statusFilter, setStatusFilter,
-    loadLeads,
-    setPage,
-  } = useMailStore();
+  const filteredOptions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) {
+      return options;
+    }
 
-  const handleChange = (setter) => (e) => {
-    setter(e.target.value);
-    setPage(1);
-    loadLeads();
+    return options.filter((option) => option.toLowerCase().includes(query));
+  }, [options, search]);
+
+  const allVisibleSelected =
+    filteredOptions.length > 0 &&
+    filteredOptions.every((option) => selectedValues.includes(option));
+
+  const toggleValue = (value) => {
+    if (selectedValues.includes(value)) {
+      onChange(selectedValues.filter((item) => item !== value));
+      return;
+    }
+
+    onChange([...selectedValues, value]);
+  };
+
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) {
+      onChange(selectedValues.filter((item) => !filteredOptions.includes(item)));
+      return;
+    }
+
+    onChange([...new Set([...selectedValues, ...filteredOptions])]);
   };
 
   return (
-    <div className="bg-gray-100 p-4 rounded-lg shadow-md">
-      <div className="grid grid-cols-3 gap-3">
-        {/* Send Email ID */}
-        <select value={sendEmailId} onChange={handleChange(setSendEmailId)} className="border rounded px-3 py-2 bg-white">
-          <option value="">Send Email ID</option>
-          {filterOptions.sendEmailId?.map((v, i) => <option key={i} value={v}>{v}</option>)}
-        </select>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between rounded border bg-white px-3 py-2 text-left"
+      >
+        <span className={selectedValues.length ? "text-gray-900" : "text-gray-500"}>
+          {selectedValues.length ? `${label} (${selectedValues.length})` : label}
+        </span>
+        <span className="text-xs text-gray-500">{open ? "▲" : "▼"}</span>
+      </button>
 
-        {/* Template Type */}
-        <select value={templateType} onChange={handleChange(setTemplateType)} className="border rounded px-3 py-2 bg-white">
+      {open && (
+        <div className="absolute z-50 mt-2 w-full rounded border bg-white p-3 shadow-lg">
+          <div className="mb-2 border-b pb-2 text-sm font-medium text-gray-700">Text Filters</div>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search"
+            className="mb-3 w-full rounded border px-3 py-2 text-sm"
+          />
+          <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleAllVisible}
+            />
+            <span>(Select All)</span>
+          </label>
+          <div className="max-h-40 overflow-y-auto space-y-2">
+            {filteredOptions.map((option) => (
+              <label key={option} className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={selectedValues.includes(option)}
+                  onChange={() => toggleValue(option)}
+                />
+                <span>{option}</span>
+              </label>
+            ))}
+            {filteredOptions.length === 0 && (
+              <div className="text-sm text-gray-500">No email IDs found.</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function MailFilters() {
+  const {
+    sendEmailId,
+    setSendEmailId,
+    filterOptions,
+    templateType,
+    setTemplateType,
+    templateSubject,
+    setTemplateSubject,
+    emailDate,
+    setEmailDate,
+    ipAddress,
+    setIpAddress,
+    webTabAndType,
+    setWebTabAndType,
+    emailVerified,
+    setEmailVerified,
+    emailSentType,
+    setEmailSentType,
+    statusFilter,
+    setStatusFilter,
+    clearFilters,
+  } = useMailStore();
+
+  const selectClassName = "border rounded px-3 py-2 bg-white";
+
+  return (
+    <div className="rounded-lg bg-gray-100 p-4 shadow-md">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <MultiSelectEmailFilter
+          label="Send Email ID"
+          options={filterOptions.sendEmailId || []}
+          selectedValues={sendEmailId}
+          onChange={setSendEmailId}
+        />
+
+        <select
+          value={templateType}
+          onChange={(e) => setTemplateType(e.target.value)}
+          className={selectClassName}
+        >
           <option value="">Template Type</option>
-          {filterOptions.templateType?.map((v, i) => <option key={i} value={v}>{v}</option>)}
-        </select>
-
-        {/* Template Subject */}
-        <select value={templateSubject} onChange={handleChange(setTemplateSubject)} className="border rounded px-3 py-2 bg-white">
-          <option value="">Template Subject</option>
-          {filterOptions.templateSubject?.map((v, i) => <option key={i} value={v}>{v}</option>)}
-        </select>
-
-        {/* Email Date – display formatted, value remains original */}
-        <select value={emailDate} onChange={handleChange(setEmailDate)} className="border rounded px-3 py-2 bg-white">
-          <option value="">Email Date</option>
-          {filterOptions.emailDate?.map((v, i) => (
-            <option key={i} value={v}>
-              {formatDateToDDMMMYY(v)}
+          {filterOptions.templateType?.map((value) => (
+            <option key={value} value={value}>
+              {value}
             </option>
           ))}
         </select>
 
-        {/* IP Address */}
-        <select value={ipAddress} onChange={handleChange(setIpAddress)} className="border rounded px-3 py-2 bg-white">
+        <select
+          value={templateSubject}
+          onChange={(e) => setTemplateSubject(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Template Subject</option>
+          {filterOptions.templateSubject?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="date"
+          value={emailDate}
+          onChange={(e) => setEmailDate(e.target.value)}
+          className={selectClassName}
+          placeholder="Email Date"
+        />
+
+        <select
+          value={ipAddress}
+          onChange={(e) => setIpAddress(e.target.value)}
+          className={selectClassName}
+        >
           <option value="">IP Address</option>
-          {filterOptions.ipAddress?.map((v, i) => <option key={i} value={v}>{v}</option>)}
+          {filterOptions.ipAddress?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
-        {/* Web Tab & Type */}
-        <select value={webTabAndType} onChange={handleChange(setWebTabAndType)} className="border rounded px-3 py-2 bg-white">
-          <option value="">Web Tab & Type</option>
-          {filterOptions.webTabAndType?.map((v, i) => <option key={i} value={v}>{v}</option>)}
+        <select
+          value={webTabAndType}
+          onChange={(e) => setWebTabAndType(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Web</option>
+          {filterOptions.webTabAndType?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
-        {/* Email Verified */}
-        <select value={emailVerified} onChange={handleChange(setEmailVerified)} className="border rounded px-3 py-2 bg-white">
+        <select
+          value={emailVerified}
+          onChange={(e) => setEmailVerified(e.target.value)}
+          className={selectClassName}
+        >
           <option value="">Email Verified</option>
-          {filterOptions.emailVerified?.map((v, i) => <option key={i} value={v}>{v}</option>)}
+          {filterOptions.emailVerified?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
-        {/* Email Sent Type */}
-        <select value={emailSentType} onChange={handleChange(setEmailSentType)} className="border rounded px-3 py-2 bg-white">
-          <option value="">Email Sent Type</option>
-          {filterOptions.emailSentType?.map((v, i) => <option key={i} value={v}>{v}</option>)}
+        <select
+          value={emailSentType}
+          onChange={(e) => setEmailSentType(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Email Sent</option>
+          {filterOptions.emailSentType?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
 
-        {/* Status */}
-        <select value={statusFilter} onChange={handleChange(setStatusFilter)} className="border rounded px-3 py-2 bg-white">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className={selectClassName}
+        >
           <option value="">Status</option>
-          {filterOptions.status?.map((v, i) => <option key={i} value={v}>{v}</option>)}
+          {filterOptions.status?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
         </select>
+      </div>
+
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="rounded border bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Clear Filters
+        </button>
       </div>
     </div>
   );

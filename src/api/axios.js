@@ -1,17 +1,12 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+const baseURL =
+  import.meta.env.VITE_API_URL?.replace(/\/+$/, "") || "http://localhost:5000";
+
 const api = axios.create({
-<<<<<<< HEAD
-  // baseURL: "https://api.eximinq.co.in/",
-  baseURL: "http://localhost:5000",
-  // withCredentials: true,
-=======
-  // baseURL: "https://crm-backend-6aw1.onrender.com/",
-  // baseURL: "https://api.eximinq.co.in/",
-  baseURL: "http://localhost:5000/",
   withCredentials: false,
->>>>>>> 1067af153db8b8b566fd192c9a2e3aba0308253c
+  baseURL,
 });
 
 api.interceptors.request.use((config) => {

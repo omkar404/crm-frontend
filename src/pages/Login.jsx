@@ -1,10 +1,9 @@
-import axios from "axios";
 import { useState, useEffect } from "react";
+import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/utils/customToast";
 import { useAuth } from "../store/AuthContext";
-
 import Logo from "../assets/CRM.jpg";
 import api from "@/api/axios";
 
@@ -12,8 +11,8 @@ export default function Login() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // 🔒 Disable body scrolling completely
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -23,6 +22,7 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const { data } = await api.post("/api/auth/login", {
@@ -38,85 +38,96 @@ export default function Login() {
       }, 700);
     } catch (err) {
       errorToast("Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden">
-      {/* LEFT PANEL - FIXED */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-white overflow-hidden">
-        <img
-          src={Logo}
-          alt="CRM Logo"
-          className="w-[360px] object-contain select-none drop-shadow-lg"
-        />
-      </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f6f4ef] px-4 py-8">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,118,110,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(201,111,59,0.10),transparent_26%)]" />
+      <div className="absolute inset-0 crm-mesh opacity-35" />
 
-      {/* RIGHT PANEL - NO SCROLL */}
-      <div className="flex items-center justify-center bg-gray-50 overflow-hidden">
-        <div className="bg-white p-10 rounded-2xl shadow-2xl w-[380px] border border-gray-100">
-          <h2
-            className="
-            text-2xl font-bold text-center mb-6 tracking-tight
-            bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 
-            bg-clip-text text-transparent
-          "
-          >
-            CRM Login
-          </h2>
+      <div className="crm-card relative w-full max-w-[430px] overflow-hidden p-8 sm:p-10">
+        <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-teal-600/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-28 w-28 rounded-full bg-orange-400/10 blur-3xl" />
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Email Address
-              </label>
-              <Input
-                type="email"
-                value={email}
-                placeholder="you@example.com"
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
-                required
+        <div className="relative">
+          <div className="flex justify-center">
+            <div className="rounded-[28px] border border-white/80 bg-white/90 p-4 shadow-[0_18px_45px_rgba(22,32,42,0.12)]">
+              <img
+                src={Logo}
+                alt="CRM brand"
+                className="h-24 w-24 rounded-[20px] object-cover sm:h-28 sm:w-28"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Password
-              </label>
-              <Input
-                type="password"
-                value={password}
-                placeholder="••••••••"
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-                required
-              />
+          <div className="mt-6 text-center">
+            <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Eximinq CRM</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Portal Login</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Sign in to continue to your CRM workspace.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="mt-8 space-y-5">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Email Address</label>
+              <div className="relative">
+                <Mail
+                  size={18}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <Input
+                  type="email"
+                  value={email}
+                  placeholder="you@example.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 rounded-2xl border-white/70 bg-[#fffdf8] pl-11 shadow-sm"
+                  required
+                />
+              </div>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Password</label>
+              <div className="relative">
+                <LockKeyhole
+                  size={18}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <Input
+                  type="password"
+                  value={password}
+                  placeholder="Enter your password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 rounded-2xl border-white/70 bg-[#fffdf8] pl-11 shadow-sm"
+                  required
+                />
+              </div>
+            </div>
+
             <Button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90"
+              disabled={loading}
+              className="h-12 w-full rounded-2xl bg-[#16202A] text-base font-semibold text-white shadow-[0_18px_45px_rgba(22,32,42,0.22)] hover:bg-[#1d2a35]"
             >
-              Login
+              {loading ? "Signing in..." : "Enter CRM"}
+              {!loading && <ArrowRight size={16} />}
             </Button>
-<<<<<<< HEAD
-                      <Button
-            type="button"
-            onClick={() => window.location.href = "/workdesk-login"}
-            className="w-full h-12 mt-4 bg-gradient-to-r from-indigo-600 to-blue-600"
-          >
-            Go to Workdesk Panel
-          </Button>
-=======
+
             <Button
               type="button"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 w-full h-12 mt-4 bg-gradient-to-r from-indigo-600 to-blue-600"
+              variant="outline"
+              onClick={() => {
+                window.location.href = "/workdesk-login";
+              }}
+              className="h-12 w-full rounded-2xl border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
             >
-             Go to Workdesk Panel 
+              Switch to Workdesk Panel
             </Button>
->>>>>>> 1067af153db8b8b566fd192c9a2e3aba0308253c
           </form>
-
         </div>
       </div>
     </div>

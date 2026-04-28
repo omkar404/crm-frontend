@@ -372,6 +372,7 @@ import MailFilters from "../components/MailFilters";
 import ImportModal from "../components/ImportModal";
 import useMailStore from "../store/mailStore";
 import { successToast, errorToast } from "@/utils/customToast";
+import { bulkDeleteMails, bulkUpdateMailStatus } from "../api/mailApi";
 
 // Priority order for sorting
 const priorityOrder = { Premium: 0, High: 1, Medium: 2, Low: 3, "": 4 };
@@ -429,7 +430,7 @@ export default function MailTable() {
   // ── Store actions & state ───────────────────────────────────────────
   const {
     leads, total, page, limit, loading, search,
-    loadLeads, loadFilterOptions, setPage, setLimit, setSearch,
+    loadLeads, setPage, setLimit, setSearch,
     deleteLead, exportCSV, clearSelection,
     toggleSelect, selectedIds,
   } = useMailStore();
@@ -470,13 +471,7 @@ export default function MailTable() {
   // ── Data & filters ──────────────────────────────────────────────────
   useEffect(() => {
     loadLeads();
-    loadFilterOptions();
   }, []);
-
-  // Reload when pagination or search changes
-  useEffect(() => {
-    loadLeads();
-  }, [page, limit, search]);
 
   // Helper to reload leads after actions
   const refresh = useCallback(() => {
@@ -557,7 +552,7 @@ const handleBulkStatusUpdate = async () => {
 
   try {
     // Call a mail‑specific bulk endpoint (we'll create it next)
-    await api.post("/api/mail/bulk-status", { ids: selectedIds, status: newStatus });
+    await bulkUpdateMailStatus(selectedIds, newStatus);
     successToast(`${selectedIds.length} mail(s) updated to ${newStatus}`);
     clearSelection();
     refresh(); // reload table
@@ -568,17 +563,17 @@ const handleBulkStatusUpdate = async () => {
 };
 
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return errorToast("No leads selected");
+    if (selectedIds.length === 0) return errorToast("No mails selected");
     const confirm = await Swal.fire({
-      title: "Delete selected leads?",
-      text: `${selectedIds.length} leads will be removed.`,
+      title: "Delete selected mails?",
+      text: `${selectedIds.length} mails will be removed.`,
       icon: "warning",
       showCancelButton: true,
     });
     if (!confirm.isConfirmed) return;
     try {
-      await api.post("/api/mail/bulk-delete", { ids: selectedIds });
-      successToast("Selected leads deleted");
+      await bulkDeleteMails(selectedIds);
+      successToast("Selected mails deleted");
       clearSelection();
       refresh();
     } catch (err) {
@@ -590,17 +585,17 @@ const handleBulkStatusUpdate = async () => {
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
-      text: "This lead will be marked as deleted.",
+      text: "This mail will be marked as deleted.",
       icon: "warning",
       showCancelButton: true,
     });
     if (!confirm.isConfirmed) return;
     try {
       await deleteLead(id);
-      successToast("Lead deleted successfully!");
+      successToast("Mail deleted successfully!");
       refresh();
     } catch (err) {
-      errorToast("Failed to delete lead!");
+      errorToast("Failed to delete mail!");
     }
   };
 
@@ -642,7 +637,7 @@ const handleBulkStatusUpdate = async () => {
       <div className="flex justify-between items-center flex-wrap gap-2" ref={dropdownRef}>
         <div className="flex items-center gap-3 flex-wrap">
           <Input
-            placeholder="Search leads..."
+            placeholder="Search mails..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-80 shadow-sm border-gray-300"
@@ -660,7 +655,7 @@ const handleBulkStatusUpdate = async () => {
 
         <div className="relative">
           <Button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-            <Plus size={16} /> Create Lead
+            <Plus size={16} /> Create Mail
             <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -668,10 +663,10 @@ const handleBulkStatusUpdate = async () => {
           {showCreateDropdown && (
             <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <button onClick={() => { setShowCreateDropdown(false); setEditLead(null); setViewMode(false); setOpenFormModal(true); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                Create Lead
+                Create Mail
               </button>
               <button onClick={() => { setShowCreateDropdown(false); setImportModalOpen(true); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                Import Leads
+                Import Mails
               </button>
             </div>
           )}
@@ -691,7 +686,7 @@ const handleBulkStatusUpdate = async () => {
       {/* Error Display (if any) */}
       {useMailStore.getState().error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded">
-          Error loading leads: {useMailStore.getState().error}
+          Error loading mails: {useMailStore.getState().error}
         </div>
       )}
 
@@ -702,12 +697,17 @@ const handleBulkStatusUpdate = async () => {
       <MailFormModal
         open={openFormModal}
         setOpen={setOpenFormModal}
-        editLead={editLead}
+        editMail={editLead}
         viewMode={viewMode}
         setViewMode={setViewMode}
         onSaved={refresh}
       />
-      <ImportModal open={importModalOpen} setOpen={setImportModalOpen} onImported={refresh} />
+      <ImportModal
+        open={importModalOpen}
+        setOpen={setImportModalOpen}
+        onImported={refresh}
+        entity="mails"
+      />
 
       {/* Table */}
       <div className="bg-white border rounded-lg shadow-md">

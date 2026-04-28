@@ -9,7 +9,6 @@
 //   { label: "Mail Table", page: "mail-table" },
 //   { label: "Mail Summary", page: "Mail-summary" },
 //   { label: "Update Status", page: "update-status" },   // new
-//   { label: "Admin Panel", page: "admin" },
 // ];
 
 // // Inside renderPage()
@@ -73,7 +72,6 @@ const NAV_ITEMS = [
   { label: "Mail Table", page: "mail-table" },
   { label: "Mail Summary", page: "mail-summary" },
   { label: "Update Status", page: "update-status" },
-  { label: "Admin Panel", page: "admin" },
 ];
 
 export default function MailCaptureForm() {
