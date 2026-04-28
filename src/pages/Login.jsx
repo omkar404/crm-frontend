@@ -93,13 +93,13 @@ export default function Login() {
                 required
               />
             </div>
-
             <Button
               type="submit"
-              className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90"
             >
               Login
             </Button>
+<<<<<<< HEAD
                       <Button
             type="button"
             onClick={() => window.location.href = "/workdesk-login"}
@@ -107,6 +107,14 @@ export default function Login() {
           >
             Go to Workdesk Panel
           </Button>
+=======
+            <Button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 w-full h-12 mt-4 bg-gradient-to-r from-indigo-600 to-blue-600"
+            >
+             Go to Workdesk Panel 
+            </Button>
+>>>>>>> 1067af153db8b8b566fd192c9a2e3aba0308253c
           </form>
 
         </div>
