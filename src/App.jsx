@@ -8,6 +8,14 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import ProtectedLayout from "./store/ProtectedLayout.jsx";
+import WorkdeskLogin from "@/workdesk/WorkdeskLogin.jsx";
+import OperationsOverview from "./workdesk/pages/OperationsOverview.jsx";
+import WorkdeskLayout from "./workdesk/WorkdeskLayout.jsx";
+import WorkdeskProtectedRoute from "./workdesk/WorkdeskProtectedRoute.jsx";
+import WorkdeskDirectory from "./workdesk/pages/Client & CHA Directory/WorkdeskDirectory.jsx";
+import InvoiceDesk from "./workdesk/pages/Invoice Issuance & Tracking/InvoiceDesk.jsx";
+import WorkAllocationDesk from "./workdesk/pages/Work Allocation Desk/WorkAllocationDesk.jsx";
+
 
 function ProtectedRoute({ children }) {
   const token = Cookies.get("token");
@@ -37,7 +45,8 @@ export default function App() {
     <>
       <BrowserRouter>
         <Routes>
-          {/* LOGIN PAGE — NO SIDEBAR, NO SCROLL */}
+
+          {/* CRM LOGIN (PUBLIC) */}
           <Route
             path="/"
             element={
@@ -47,22 +56,33 @@ export default function App() {
             }
           />
 
-          {/* PROTECTED PAGES WITH SIDEBAR */}
-          <Route
-            path="*"
-            element={
-              <ProtectedLayout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/leads" element={<LeadTable />} />
-                  <Route path="/summary" element={<LeadSummary />} />
-                  <Route path="/admin" element={<AdminPanel />} />
-                </Routes>
-              </ProtectedLayout>
-            }
-          />
+          {/* CRM PROTECTED */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/leads" element={<LeadTable />} />
+            <Route path="/summary" element={<LeadSummary />} />
+            <Route path="/admin" element={<AdminPanel />} />
+          </Route>
+
+          {/* WORKDESK LOGIN (PUBLIC) */}
+          <Route path="/workdesk-login" element={<WorkdeskLogin />} />
+
+          {/* WORKDESK PROTECTED */}
+          <Route element={<WorkdeskProtectedRoute />}>
+            {/* <Route path="/workdesk/dashboard" element={<WorkdeskDashboard />} /> */}
+
+            <Route path="/workdesk" element={<WorkdeskLayout />}>
+              <Route path="dashboard" element={<OperationsOverview />} />
+              <Route path="directory" element={<WorkdeskDirectory />} />
+              <Route path="invoices" element={ <InvoiceDesk/>} />
+              <Route path="tasks" element={< WorkAllocationDesk />} />
+            </Route>
+
+          </Route>
+
         </Routes>
       </BrowserRouter>
+
 
       <Toaster position="top-right" />
     </>

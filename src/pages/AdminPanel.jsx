@@ -38,7 +38,7 @@ export default function AdminPanel() {
             <div className="grid grid-cols-2 gap-3">
               <Input
                 placeholder="Backend API Base URL"
-                defaultValue="http://localhost:5000"
+                defaultValue="https://api.eximinq.co.in/"
               />
               <Input placeholder="Admin Email (notifications)" />
             </div>
