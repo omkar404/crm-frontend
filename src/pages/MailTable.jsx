@@ -431,7 +431,7 @@ export default function MailTable() {
   const {
     leads, total, page, limit, loading, search,
     loadLeads, setPage, setLimit, setSearch,
-    deleteLead, exportCSV, clearSelection,
+    deleteLead, exportCSV, clearSelection, clearFilters,
     toggleSelect, selectedIds,
   } = useMailStore();
 
@@ -593,7 +593,6 @@ const handleBulkStatusUpdate = async () => {
     try {
       await deleteLead(id);
       successToast("Mail deleted successfully!");
-      refresh();
     } catch (err) {
       errorToast("Failed to delete mail!");
     }
@@ -611,9 +610,7 @@ const handleBulkStatusUpdate = async () => {
 
   // ── Clear all filters ───────────────────────────────────────────────
   const handleClearFilters = () => {
-    setSearch("");
-    setPage(1);
-    refresh();
+    clearFilters();
     successToast("Filters cleared");
   };
 

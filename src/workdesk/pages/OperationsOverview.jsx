@@ -1,180 +1,179 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   ShieldAlert,
   CheckCircle2,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 
-export default function OperationsOverview({ tasks = [] }) {
-  const now = new Date();
+import { getClients } from "@/api/workdeskAuth.api";
+import { getWorkdeskDashboardApi } from "@/api/workdesk.api";
+import { getWorkdeskMetaApi } from "@/api/workdesk.api";
+import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
+import { errorToast } from "@/utils/customToast";
+import { getApiErrorMessage } from "@/utils/apiError";
+import AllocateWorkModal from "@/workdesk/pages/Work Allocation Desk/AllocateWorkModal";
 
-  const stats = useMemo(() => {
-    const isToday = (d) =>
-      new Date(d).toDateString() === now.toDateString();
+export default function OperationsOverview() {
+  const { user } = useWorkdeskAuthStore();
+  const isAdmin = user?.role === "ADMIN";
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showAllocate, setShowAllocate] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [meta, setMeta] = useState({ serviceTypes: {}, staff: [], workflowStatuses: [] });
+  const [allocateDataLoaded, setAllocateDataLoaded] = useState(false);
 
-    const isThisWeek = (d) =>
-      (now - new Date(d)) / (1000 * 60 * 60 * 24) <= 7;
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const dashboardResponse = await getWorkdeskDashboardApi();
 
-    const isThisMonth = (d) =>
-      new Date(d).getMonth() === now.getMonth() &&
-      new Date(d).getFullYear() === now.getFullYear();
+      setAnalytics(dashboardResponse?.data || null);
+    } catch (error) {
+      errorToast(getApiErrorMessage(error, "Unable to load dashboard analytics."));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const isThisYear = (d) =>
-      new Date(d).getFullYear() === now.getFullYear();
+  const loadAllocateData = async () => {
+    if (!isAdmin || allocateDataLoaded) {
+      return;
+    }
 
-    const completedStatuses = ["INVOICE PAID", "APPROVED"];
+    try {
+      const [clientsResponse, metaResponse] = await Promise.all([
+        getClients(),
+        getWorkdeskMetaApi(),
+      ]);
 
-    const active = tasks.filter(
-      (t) => !completedStatuses.includes(t.status)
-    );
+      setClients(Array.isArray(clientsResponse?.data?.data) ? clientsResponse.data.data : []);
+      setMeta(metaResponse || { serviceTypes: {}, staff: [], workflowStatuses: [] });
+      setAllocateDataLoaded(true);
+    } catch (error) {
+      errorToast(getApiErrorMessage(error, "Unable to load allocation data."));
+    }
+  };
 
-    const completed = tasks.filter((t) =>
-      completedStatuses.includes(t.status)
-    );
+  useEffect(() => {
+    loadData();
+  }, []);
 
-    const highPriority = active.filter((t) => {
-      const created = new Date(t.createdAt).getTime();
-      const deadline =
-        created + t.deadlineHours * 60 * 60 * 1000;
-      return deadline < Date.now();
-    });
+  useEffect(() => {
+    if (showAllocate) {
+      loadAllocateData();
+    }
+  }, [showAllocate]);
 
-    const staffLoad = {};
-    const invoiceReady = {};
-
-    active.forEach((t) => {
-      staffLoad[t.assignedTo] =
-        (staffLoad[t.assignedTo] || 0) + 1;
-    });
-
-    tasks
-      .filter((t) => t.status === "Pending for Invoicing")
-      .forEach((t) => {
-        invoiceReady[t.assignedTo] =
-          (invoiceReady[t.assignedTo] || 0) + 1;
-      });
-
-    return {
-      today: tasks.filter((t) => isToday(t.createdAt)).length,
-      week: tasks.filter((t) => isThisWeek(t.createdAt)).length,
-      month: tasks.filter((t) => isThisMonth(t.createdAt)).length,
-      year: tasks.filter((t) => isThisYear(t.createdAt)).length,
-      totalActive: active.length,
-      highPriority: highPriority.length,
-      completed: completed.length,
-      staffLoad,
-      invoiceReady
-    };
-  }, [tasks]);
+  const volume = analytics?.volume || {};
+  const summary = analytics?.summary || {};
+  const staffLoad = analytics?.staffLoad || [];
+  const staffReadyInvoice = analytics?.staffReadyInvoice || [];
 
   return (
     <div className="bg-slate-100 min-h-screen p-4">
-
       <div className="bg-slate-50 rounded-xl border shadow-sm p-6 space-y-6">
-
         <div className="flex justify-between items-center border-b pb-3">
-          <h3 className="text-2xl font-bold text-slate-800">
-            Operations Overview
-          </h3>
+          <h3 className="text-2xl font-bold text-slate-800">Operations Overview</h3>
+          {isAdmin ? (
+            <button
+              onClick={() => setShowAllocate(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm"
+            >
+              + Allocate Work
+            </button>
+          ) : null}
         </div>
-     
 
-      {/* REQUEST VOLUME */}
-      <div className="bg-white rounded-xl border p-6">
-        <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-6">
-          <CalendarDays className="w-5 h-5 text-blue-600" />
-          Request Volume Analytics
-        </h3>
+        {showAllocate ? (
+          <AllocateWorkModal
+            clients={clients}
+            staff={meta.staff}
+            serviceTypes={meta.serviceTypes}
+            onClose={() => setShowAllocate(false)}
+            onSubmit={async () => {
+              await Promise.all([loadData(), loadAllocateData()]);
+            }}
+          />
+        ) : null}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Metric label="TODAY" value={stats.today} />
-          <Metric label="THIS WEEK" value={stats.week} />
-          <Metric label="THIS MONTH" value={stats.month} />
-          <Metric label="THIS YEAR" value={stats.year} />
-        </div>
-      </div>
+        {loading ? <div className="text-sm text-slate-500">Loading analytics...</div> : null}
 
-      {/* STATUS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatusCard title="TOTAL ACTIVE" value={stats.totalActive} />
-        <StatusCard
-          title="HIGH PRIORITY"
-          value={stats.highPriority}
-          danger
-          icon={<ShieldAlert className="w-4 h-4" />}
-        />
-        <StatusCard
-          title="COMPLETED"
-          value={stats.completed}
-          success
-        />
-      </div>
-
-      {/* STAFF SECTIONS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* STAFF WORKLOAD */}
         <div className="bg-white rounded-xl border p-6">
           <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-6">
-            <BarChart3 className="w-5 h-5 text-gray-700" />
-            Current Staff Workload (Active)
+            <CalendarDays className="w-5 h-5 text-blue-600" />
+            Request Volume Analytics
           </h3>
 
-          <div className="grid grid-cols-4 gap-4 text-center">
-            {["Staff A", "Staff B", "Staff C", "Staff D"].map((s) => (
-              <div key={s}>
-                <div className="text-xl font-bold text-blue-600">
-                  {stats.staffLoad[s] || 0}
-                </div>
-                <div className="text-xs font-bold text-gray-500 uppercase">
-                  {s}
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Metric label="TODAY" value={volume.daily || 0} />
+            <Metric label="THIS WEEK" value={volume.weekly || 0} />
+            <Metric label="THIS MONTH" value={volume.monthly || 0} />
+            <Metric label="THIS YEAR" value={volume.yearly || 0} />
           </div>
         </div>
 
-        {/* READY FOR INVOICE */}
-        <div className="bg-white rounded-xl border border-green-200 p-6">
-          <h3 className="flex items-center gap-2 font-bold text-green-700 mb-6">
-            <CheckCircle2 className="w-5 h-5" />
-            Ready for Invoice (By Staff)
-          </h3>
-
-          <div className="grid grid-cols-4 gap-4 text-center">
-            {["Staff A", "Staff B", "Staff C", "Staff D"].map((s) => (
-              <div key={s}>
-                <div className="text-xl font-bold text-green-700">
-                  {stats.invoiceReady[s] || 0}
-                </div>
-                <div className="text-xs font-bold text-green-700 uppercase">
-                  {s}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatusCard title="TOTAL ACTIVE" value={summary.totalActive || 0} />
+          <StatusCard
+            title="HIGH PRIORITY"
+            value={summary.critical || 0}
+            danger
+            icon={<ShieldAlert className="w-4 h-4" />}
+          />
+          <StatusCard
+            title="COMPLETED"
+            value={summary.completed || 0}
+            success
+          />
         </div>
 
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl border p-6">
+            <h3 className="flex items-center gap-2 font-bold text-gray-800 mb-6">
+              <BarChart3 className="w-5 h-5 text-gray-700" />
+              Current Staff Workload (Active)
+            </h3>
 
-      </div>
+            <div className="space-y-3">
+              {staffLoad.length === 0 ? <p className="text-sm text-slate-400">No workload data.</p> : null}
+              {staffLoad.map((item) => (
+                <div key={item._id} className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">{item._id || "Unassigned"}</span>
+                  <span className="font-bold text-blue-600">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
+          <div className="bg-white rounded-xl border border-green-200 p-6">
+            <h3 className="flex items-center gap-2 font-bold text-green-700 mb-6">
+              <CheckCircle2 className="w-5 h-5" />
+              Ready for Invoice (By Staff)
+            </h3>
+
+            <div className="space-y-3">
+              {staffReadyInvoice.length === 0 ? <p className="text-sm text-slate-400">No invoice-ready tasks.</p> : null}
+              {staffReadyInvoice.map((item) => (
+                <div key={item._id} className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">{item._id || "Unassigned"}</span>
+                  <span className="font-bold text-green-700">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ---------------- SMALL COMPONENTS ---------------- */
-
 function Metric({ label, value }) {
   return (
     <div className="bg-blue-50 rounded-lg p-4 text-center">
-      <div className="text-2xl font-bold text-blue-700">
-        {value}
-      </div>
-      <div className="text-xs font-bold text-blue-600 mt-1">
-        {label}
-      </div>
+      <div className="text-2xl font-bold text-blue-700">{value}</div>
+      <div className="text-xs font-bold text-blue-600 mt-1">{label}</div>
     </div>
   );
 }
@@ -183,20 +182,12 @@ function StatusCard({ title, value, danger, success, icon }) {
   return (
     <div
       className={`rounded-xl border p-6 ${
-        danger
-          ? "border-red-300"
-          : success
-          ? "border-green-300"
-          : "border-gray-200"
+        danger ? "border-red-300" : success ? "border-green-300" : "border-gray-200"
       }`}
     >
       <div
         className={`flex items-center gap-2 text-sm font-bold ${
-          danger
-            ? "text-red-600"
-            : success
-            ? "text-green-600"
-            : "text-gray-600"
+          danger ? "text-red-600" : success ? "text-green-600" : "text-gray-600"
         }`}
       >
         {icon}
@@ -205,11 +196,7 @@ function StatusCard({ title, value, danger, success, icon }) {
 
       <div
         className={`text-3xl font-bold mt-2 ${
-          danger
-            ? "text-red-700"
-            : success
-            ? "text-green-700"
-            : "text-gray-800"
+          danger ? "text-red-700" : success ? "text-green-700" : "text-gray-800"
         }`}
       >
         {value}

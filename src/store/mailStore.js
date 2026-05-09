@@ -347,7 +347,9 @@ const useMailStore = create((set, get) => ({
   setStatusFilter: (value) => { set({ statusFilter: value, page: 1 }); get().loadLeads(); },
 
   clearFilters: () => {
+    clearTimeout(searchTimer);
     set({
+      search: "",
       sendEmailId: [],
       templateType: "",
       templateSubject: "",

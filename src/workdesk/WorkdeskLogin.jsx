@@ -3,13 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/utils/customToast";
 import { useNavigate } from "react-router-dom";
+import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
 
 
 import Logo from "../assets/CRM.jpg"; // reuse same logo
-import { workdeskLoginApi } from "@/api/workdeskAuth.api";
 
 export default function WorkdeskLogin() {
   const navigate = useNavigate();
+  const login = useWorkdeskAuthStore((state) => state.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const handleWorkdeskLogin = async (e) => {
   try {
     setLoading(true);
 
-    await workdeskLoginApi({ email, password });
+    await login({ email, password });
 
     successToast("Workdesk login successful");
     navigate("/workdesk/dashboard");

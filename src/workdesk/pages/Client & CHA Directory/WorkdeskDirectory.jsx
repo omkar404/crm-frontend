@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Pencil, Eye, EyeOff, Key, CreditCard } from "lucide-react";
 import workdeskAxios from "@/api/workdeskAxios";
 import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
+import { getWorkdeskClientSecretsApi } from "@/api/workdesk.api";
 
 import AddClientModal from "./AddClientModal";
 import AddChaModal from "./AddChaModal";
@@ -63,6 +64,23 @@ export default function WorkdeskDirectory() {
 
   const togglePassword = (id) => {
     setShowPasswords((p) => ({ ...p, [id]: !p[id] }));
+  };
+
+  const handleRevealSecrets = async (client) => {
+    if (!showPasswords[client._id] && isAdmin) {
+      const secrets = await getWorkdeskClientSecretsApi(client._id);
+      setClients((prev) =>
+        prev.map((item) => (item._id === client._id ? { ...item, ...secrets } : item))
+      );
+    }
+    togglePassword(client._id);
+  };
+
+  const handleEdit = async (client) => {
+    if (!isAdmin) return;
+    const secrets = await getWorkdeskClientSecretsApi(client._id);
+    setEditingClient({ ...client, ...secrets });
+    setShowAddClient(true);
   };
 
   /* ---------------- UI ---------------- */
@@ -176,10 +194,7 @@ export default function WorkdeskDirectory() {
               >
                 {isAdmin && (
                   <button
-                    onClick={() => {
-                      setEditingClient(client);
-                      setShowAddClient(true);
-                    }}
+                    onClick={() => handleEdit(client)}
                     className="absolute top-4 right-4"
                   >
                     <Pencil className="w-4 h-4 text-gray-400" />
@@ -213,7 +228,7 @@ export default function WorkdeskDirectory() {
                     <span className="text-xs font-bold flex items-center gap-1">
                       <Key className="w-3 h-3" /> Credentials
                     </span>
-                    <button onClick={() => togglePassword(client._id)}>
+                    <button onClick={() => handleRevealSecrets(client)}>
                       {showPasswords[client._id] ? (
                         <EyeOff className="w-3 h-3" />
                       ) : (

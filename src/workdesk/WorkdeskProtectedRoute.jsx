@@ -1,13 +1,16 @@
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+
 import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
 
 export default function WorkdeskProtectedRoute() {
   const { user, loading, fetchMe } = useWorkdeskAuthStore();
 
   useEffect(() => {
-    fetchMe(); // 🔥 THIS WAS MISSING
-  }, []);
+    if (loading && !user) {
+      fetchMe();
+    }
+  }, [fetchMe, loading, user]);
 
   if (loading) return null;
 

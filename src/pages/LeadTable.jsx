@@ -146,6 +146,7 @@ function escapeRegex(s) {
 export default function LeadTable() {
   const [leads, setLeads] = useState([]);
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editLead, setEditLead] = useState(null);
   const [viewMode, setViewMode] = useState(false);
@@ -179,6 +180,7 @@ export default function LeadTable() {
 
   const [openActionMenu, setOpenActionMenu] = useState(null);
   const dropdownRef = useRef(null);
+  const latestFetchRequestIdRef = useRef(0);
 
   const [sortField, setSortField] = useState(null); // "name" | "email" | "createdAt" | "priorityRating"
   const [sortDir, setSortDir] = useState("asc");
@@ -214,6 +216,16 @@ export default function LeadTable() {
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedQ(q);
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [q]);
 
   const handleBulkStatusUpdate = async () => {
     const { value: status } = await Swal.fire({
@@ -281,12 +293,15 @@ export default function LeadTable() {
   };
 
   const fetchLeads = useCallback(async () => {
+    const requestId = latestFetchRequestIdRef.current + 1;
+    latestFetchRequestIdRef.current = requestId;
+
     try {
       const r = await api.get("api/auth/list", {
         params: {
           page,
           limit,
-          search: q,
+          search: debouncedQ,
           leadStatus: status,
           industry: industry,
           leadType: leadType,
@@ -296,6 +311,10 @@ export default function LeadTable() {
           includeFilters: !filterOptionsLoaded,
         },
       });
+
+      if (latestFetchRequestIdRef.current !== requestId) {
+        return;
+      }
 
       setLeads(Array.isArray(r.data.leads) ? r.data.leads : []);
       setTotalPages(r.data.totalPages || 1);
@@ -314,7 +333,7 @@ export default function LeadTable() {
   }, [
     page,
     limit,
-    q,
+    debouncedQ,
     status,
     industry,
     leadType,

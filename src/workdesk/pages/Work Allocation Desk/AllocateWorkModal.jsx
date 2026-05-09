@@ -1,72 +1,80 @@
 import { createPortal } from "react-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 
-const STAFF = ["Staff A", "Staff B", "Staff C", "Staff D"]; 
+import { createWorkdeskTaskApi } from "@/api/workdesk.api";
+import { errorToast, successToast } from "@/utils/customToast";
+import { getApiErrorMessage } from "@/utils/apiError";
 
-const SERVICES = {
-  "DGFT Appeal": ["First Appeal", "Second Appeal"],
-  "Duty Drawback": ["Brand Rate Fixation", "Claim"],
-};
-
-export default function AllocateWorkModal({ clients, onClose, onSubmit }) {
+export default function AllocateWorkModal({
+  clients,
+  onClose,
+  onSubmit,
+  staff = [],
+  serviceTypes = {},
+}) {
   const [form, setForm] = useState({
     clientId: "",
-    service: "",
+    serviceType: "",
     subType: "",
-    assignedTo: STAFF[0],
-    email: "",
+    assignedToUserId: staff[0]?._id || "",
+    emailSender: "",
     emailDate: "",
-    note: "",
-    slaHours: 48,
+    details: "",
+    slaDays: 5,
   });
+  const [loading, setLoading] = useState(false);
 
-  const client = clients.find((c) => c.id === form.clientId);
+  useEffect(() => {
+    if (!form.assignedToUserId && staff[0]?._id) {
+      setForm((prev) => ({
+        ...prev,
+        assignedToUserId: staff[0]._id,
+      }));
+    }
+  }, [staff, form.assignedToUserId]);
 
-  const submit = () => {
-    if (!client || !form.service || !form.subType) return;
+  const submit = async () => {
+    if (!form.clientId || !form.serviceType || !form.subType || !form.assignedToUserId) {
+      errorToast("Client, service type, sub type, and assigned staff are required.");
+      return;
+    }
 
-    onSubmit({
-      id: Date.now().toString(),
-      srNo: `SR-${Math.floor(100000 + Math.random() * 900000)}`,
-      clientId: client.clientId,
-      clientName: client.name,
-      source: client.source,
-      chaName: client.chaName,
-      service: form.service,
-      subType: form.subType,
-      note: form.note,
-      email: form.email,
-      emailDate: form.emailDate,
-      assignedTo: form.assignedTo,
-      status: "APPLICATION DRAFTING IN PROGRESS",
-      createdAt: new Date().toISOString(),
-      slaHours: Number(form.slaHours),
-    });
-
-    onClose();
+    try {
+      setLoading(true);
+      const createdTask = await createWorkdeskTaskApi(form);
+      onSubmit(createdTask);
+      successToast(
+        createdTask?.notification?.sent
+          ? `Work allocated and email sent to ${createdTask.notification.to}.`
+          : "Work allocated successfully."
+      );
+      onClose();
+    } catch (error) {
+      errorToast(getApiErrorMessage(error, "Unable to allocate work."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return createPortal(
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
       <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden">
-
         <div className="bg-blue-600 text-white px-6 py-4 flex justify-between">
           <h3 className="font-bold">Allocate Work</h3>
-          <button onClick={onClose}>×</button>
+          <button onClick={onClose}>x</button>
         </div>
 
         <div className="p-6 space-y-4">
           <select
             className="w-full border rounded-lg p-2"
-            onChange={(e) =>
-              setForm({ ...form, clientId: e.target.value })
-            }
+            value={form.clientId}
+            onChange={(e) => setForm({ ...form, clientId: e.target.value })}
           >
             <option value="">Select Client</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.clientId})
+            {clients.map((client) => (
+              <option key={client._id} value={client._id}>
+                {client.name} ({client.clientId})
               </option>
             ))}
           </select>
@@ -74,50 +82,49 @@ export default function AllocateWorkModal({ clients, onClose, onSubmit }) {
           <div className="grid grid-cols-2 gap-4">
             <select
               className="border rounded-lg p-2"
-              onChange={(e) =>
-                setForm({ ...form, service: e.target.value })
-              }
+              value={form.serviceType}
+              onChange={(e) => setForm({ ...form, serviceType: e.target.value, subType: "" })}
             >
               <option value="">Service</option>
-              {Object.keys(SERVICES).map((s) => (
-                <option key={s}>{s}</option>
+              {Object.keys(serviceTypes).map((service) => (
+                <option key={service} value={service}>
+                  {service}
+                </option>
               ))}
             </select>
 
             <select
               className="border rounded-lg p-2"
-              disabled={!form.service}
-              onChange={(e) =>
-                setForm({ ...form, subType: e.target.value })
-              }
+              disabled={!form.serviceType}
+              value={form.subType}
+              onChange={(e) => setForm({ ...form, subType: e.target.value })}
             >
               <option value="">Sub Type</option>
-              {form.service &&
-                SERVICES[form.service].map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
+              {(serviceTypes[form.serviceType] || []).map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="bg-gray-50 p-3 rounded-lg">
             <div className="flex items-center gap-1 text-xs font-bold text-gray-500 mb-2">
               <Mail className="w-4 h-4" />
-              Source Email
+              Client Sender Email
             </div>
             <div className="grid grid-cols-2 gap-3">
               <input
                 className="border rounded p-2 text-sm"
-                placeholder="Sender Email"
-                onChange={(e) =>
-                  setForm({ ...form, email: e.target.value })
-                }
+                placeholder="client@email.com"
+                value={form.emailSender}
+                onChange={(e) => setForm({ ...form, emailSender: e.target.value })}
               />
               <input
                 type="datetime-local"
                 className="border rounded p-2 text-sm"
-                onChange={(e) =>
-                  setForm({ ...form, emailDate: e.target.value })
-                }
+                value={form.emailDate}
+                onChange={(e) => setForm({ ...form, emailDate: e.target.value })}
               />
             </div>
           </div>
@@ -125,12 +132,14 @@ export default function AllocateWorkModal({ clients, onClose, onSubmit }) {
           <div className="grid grid-cols-2 gap-4">
             <select
               className="border rounded-lg p-2"
-              onChange={(e) =>
-                setForm({ ...form, assignedTo: e.target.value })
-              }
+              value={form.assignedToUserId}
+              onChange={(e) => setForm({ ...form, assignedToUserId: e.target.value })}
             >
-              {STAFF.map((s) => (
-                <option key={s}>{s}</option>
+              <option value="">Assign staff</option>
+              {staff.map((member) => (
+              <option key={member._id} value={member._id}>
+                  {member.name} ({member.email})
+              </option>
               ))}
             </select>
 
@@ -138,19 +147,16 @@ export default function AllocateWorkModal({ clients, onClose, onSubmit }) {
               type="number"
               min={1}
               className="border rounded-lg p-2"
-              value={form.slaHours}
-              onChange={(e) =>
-                setForm({ ...form, slaHours: e.target.value })
-              }
+              value={form.slaDays}
+              onChange={(e) => setForm({ ...form, slaDays: e.target.value })}
             />
           </div>
 
           <textarea
             className="border rounded-lg p-2 h-20 text-sm"
             placeholder="Special Instructions"
-            onChange={(e) =>
-              setForm({ ...form, note: e.target.value })
-            }
+            value={form.details}
+            onChange={(e) => setForm({ ...form, details: e.target.value })}
           />
         </div>
 
@@ -158,9 +164,10 @@ export default function AllocateWorkModal({ clients, onClose, onSubmit }) {
           <button onClick={onClose}>Cancel</button>
           <button
             onClick={submit}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+            disabled={loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
           >
-            Allocate
+            {loading ? "Allocating..." : "Allocate"}
           </button>
         </div>
       </div>

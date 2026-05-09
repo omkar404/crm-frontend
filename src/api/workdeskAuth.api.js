@@ -14,11 +14,11 @@ export const workdeskMeApi = async () => {
 };
 
 export const createClient = (payload) => {
-  return axios.post("/clients", payload);
+  return workdeskAxios.post("/clients", payload);
 };
 
 export const getClients = () => {
-  return axios.get("/clients");
+  return workdeskAxios.get("/clients");
 };
 
 export const workdeskRefreshTokenApi = async () => {

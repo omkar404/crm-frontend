@@ -1,176 +1,138 @@
-
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
+
 import workdeskAxios from "@/api/workdeskAxios";
-import { useState, useEffect } from "react";
+import { errorToast, successToast } from "@/utils/customToast";
+import { getApiErrorMessage } from "@/utils/apiError";
 
-export default function AddClientModal({
-  onClose,
-  onSuccess,
-  chas = [],
-  client
-})
- {
+const emptyForm = {
+  name: "",
+  source: "Direct",
+  chaId: "",
+  contactPerson: "",
+  contactMobile: "",
+  contactEmail: "",
+  authSignatoryName: "",
+  authSignatoryMobile: "",
+  authSignatoryAadhaar: "",
+  dgftLogin: "",
+  dgftPassword: "",
+  icegateLogin: "",
+  icegatePassword: "",
+  dscHolder: "",
+  dscExpiry: "",
+};
+
+export default function AddClientModal({ onClose, onSuccess, chas = [], client }) {
   const [loading, setLoading] = useState(false);
-console.log("onSuccess", onSuccess.client);
+  const [form, setForm] = useState(emptyForm);
 
-useEffect(() => {
-  if (client) {
+  useEffect(() => {
+    if (!client) {
+      setForm(emptyForm);
+      return;
+    }
+
     setForm({
-      name: client?.name || "",
-      source: client?.source || "Direct",
-      chaId: client?.chaId || "",
-
-      contactPerson: client?.contactPerson || "",
-      contactMobile: client?.contactMobile || "",
-      contactEmail: client?.contactEmail || "",
-
-      authSignatoryName: client?.authSignatoryName || "",
-      authSignatoryMobile: client?.authSignatoryMobile || "",
-      authSignatoryAadhaar: client?.authSignatoryAadhaar || "",
-
-      dgftLogin: client?.dgftLogin || "",
-      dgftPassword: client?.dgftPassword || "",
-
-      icegateLogin: client?.icegateLogin || "",
-      icegatePassword: client?.icegatePassword || "",
-
-      dscHolder: client?.dscHolder || "",
-      dscExpiry: client?.dscExpiry
-        ? client.dscExpiry.split("T")[0]
-        : "",
+      name: client.name || "",
+      source: client.source || "Direct",
+      chaId: client.chaId || "",
+      contactPerson: client.contactPerson || "",
+      contactMobile: client.contactMobile || "",
+      contactEmail: client.contactEmail || "",
+      authSignatoryName: client.authSignatoryName || "",
+      authSignatoryMobile: client.authSignatoryMobile || "",
+      authSignatoryAadhaar: client.authSignatoryAadhaar || "",
+      dgftLogin: client.dgftLogin || "",
+      dgftPassword: client.dgftPassword || "",
+      icegateLogin: client.icegateLogin || "",
+      icegatePassword: client.icegatePassword || "",
+      dscHolder: client.dscHolder || "",
+      dscExpiry: client.dscExpiry ? client.dscExpiry.split("T")[0] : "",
     });
-  }
-}, [client]);
+  }, [client]);
 
-const [form, setForm] = useState({
-  name: client?.name || "",
-  source: client?.source || "Direct",
-  chaId: client?.chaId || "",
-
-  contactPerson: client?.contactPerson || "",
-  contactMobile: client?.contactMobile || "",
-  contactEmail: client?.contactEmail || "",
-
-  authSignatoryName: client?.authSignatoryName || "",
-  authSignatoryMobile: client?.authSignatoryMobile || "",
-  authSignatoryAadhaar: client?.authSignatoryAadhaar || "",
-
-  dgftLogin: client?.dgftLogin || "",
-  dgftPassword: client?.dgftPassword || "",
-
-  icegateLogin: client?.icegateLogin || "",
-  icegatePassword: client?.icegatePassword || "",
-
-  dscHolder: client?.dscHolder || "",
-  dscExpiry: client?.dscExpiry
-    ? client.dscExpiry.split("T")[0]
-    : "",
-});
-
-  const resetForm = () => {
-    setForm({
-      name: "",
-      source: "Direct",
-      chaId: "",
-      contactPerson: "",
-      contactMobile: "",
-      contactEmail: "",
-      authSignatoryName: "",
-      authSignatoryMobile: "",
-      authSignatoryAadhaar: "",
-      dgftLogin: "",
-      dgftPassword: "",
-      icegateLogin: "",
-      icegatePassword: "",
-      dscHolder: "",
-      dscExpiry: "",
-    });
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
-
-  const validateForm = () => {
-    const e = {};
-    if (!form.name.trim()) e.name = "Company name is required";
-    if (form.source === "CHA" && !form.chaId) e.chaId = "Please select a CHA";
-    if (form.contactMobile && !/^\d{10}$/.test(form.contactMobile))
-      e.contactMobile = "Enter a valid 10-digit mobile number";
-    if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail))
-      e.contactEmail = "Enter a valid email address";
-    if (form.authSignatoryMobile && !/^\d{10}$/.test(form.authSignatoryMobile))
-      e.authSignatoryMobile = "Enter a valid 10-digit mobile number";
-    return e;
-  };
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const validateForm = () => {
+    const errors = {};
 
-  const errors = validateForm();
-  if (Object.keys(errors).length) {
-    setLoading(false);
-    return alert(JSON.stringify(errors, null, 2));
-  }
-
-  const payload = {
-    name: form.name,
-    source: form.source,
-    chaId: form.source === "CHA" ? form.chaId : null,
-    contactPerson: form.contactPerson,
-    contactMobile: form.contactMobile,
-    contactEmail: form.contactEmail,
-    authSignatoryName: form.authSignatoryName,
-    authSignatoryMobile: form.authSignatoryMobile,
-    authSignatoryAadhaar: form.authSignatoryAadhaar,
-    dgftLogin: form.dgftLogin,
-    dgftPassword: form.dgftPassword,
-    icegateLogin: form.icegateLogin,
-    icegatePassword: form.icegatePassword,
-    dscHolder: form.dscHolder,
-    dscExpiry: form.dscExpiry,
-  };
-
-  try {
-    let response;
-
-    if (client?._id) {
-      response = await workdeskAxios.put(`/clients/${client._id}`, payload);
-    } else {
-      response = await workdeskAxios.post("/clients", payload);
+    if (!form.name.trim()) errors.name = "Company name is required";
+    if (form.source === "CHA" && !form.chaId) errors.chaId = "Please select a CHA";
+    if (form.contactMobile && !/^\d{10}$/.test(form.contactMobile)) {
+      errors.contactMobile = "Enter a valid 10-digit mobile number";
+    }
+    if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
+      errors.contactEmail = "Enter a valid email address";
+    }
+    if (form.authSignatoryMobile && !/^\d{10}$/.test(form.authSignatoryMobile)) {
+      errors.authSignatoryMobile = "Enter a valid 10-digit mobile number";
     }
 
-    onSuccess(response.data);
-  } catch (err) {
-    console.error("Client save failed", err);
-  } finally {
-    setLoading(false);
-  }
-};
+    return errors;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+
+    const errors = validateForm();
+    if (Object.keys(errors).length) {
+      setLoading(false);
+      errorToast(Object.values(errors)[0]);
+      return;
+    }
+
+    const payload = {
+      name: form.name,
+      source: form.source,
+      chaId: form.source === "CHA" ? form.chaId : null,
+      contactPerson: form.contactPerson,
+      contactMobile: form.contactMobile,
+      contactEmail: form.contactEmail,
+      authSignatoryName: form.authSignatoryName,
+      authSignatoryMobile: form.authSignatoryMobile,
+      authSignatoryAadhaar: form.authSignatoryAadhaar,
+      dgftLogin: form.dgftLogin,
+      dgftPassword: form.dgftPassword,
+      icegateLogin: form.icegateLogin,
+      icegatePassword: form.icegatePassword,
+      dscHolder: form.dscHolder,
+      dscExpiry: form.dscExpiry,
+    };
+
+    try {
+      if (client?._id) {
+        await workdeskAxios.put(`/clients/${client._id}`, payload);
+      } else {
+        await workdeskAxios.post("/clients", payload);
+      }
+
+      onSuccess();
+      successToast(client ? "Client updated successfully." : "Client created successfully.");
+      onClose();
+    } catch (err) {
+      errorToast(getApiErrorMessage(err, "Client save failed."));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-
         <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
-          <h3 className="font-bold">
-            {client ? "Edit Client Data" : "Add New Client"}
-          </h3>
-          <button onClick={handleClose}>
+          <h3 className="font-bold">{client ? "Edit Client Data" : "Add New Client"}</h3>
+          <button onClick={onClose}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-6 overflow-y-auto">
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-
-            {/* SOURCE */}
             <div className="col-span-2">
               <div className="flex gap-6">
                 <label>
@@ -191,7 +153,7 @@ const handleSubmit = async (e) => {
                 </label>
               </div>
 
-              {form.source === "CHA" && (
+              {form.source === "CHA" ? (
                 <select
                   value={form.chaId}
                   onChange={(e) => update("chaId", e.target.value)}
@@ -199,16 +161,15 @@ const handleSubmit = async (e) => {
                   required
                 >
                   <option value="">Select CHA</option>
-                  {(chas || []).map((c) => (
-                    <option key={c._id} value={c._id}>
-                       {c.chaname}
+                  {chas.map((cha) => (
+                    <option key={cha._id} value={cha._id}>
+                      {cha.chaname}
                     </option>
                   ))}
                 </select>
-              )}
+              ) : null}
             </div>
 
-            {/* NAME */}
             <div className="col-span-2">
               <input
                 required
@@ -219,11 +180,8 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* CONTACT PERSON */}
             <div className="col-span-2 border-t pt-2 mt-2">
-              <h4 className="text-xs font-bold text-indigo-600">
-                Client Contact Person
-              </h4>
+              <h4 className="text-xs font-bold text-indigo-600">Client Contact Person</h4>
             </div>
 
             <div>
@@ -249,7 +207,7 @@ const handleSubmit = async (e) => {
             <div className="col-span-2">
               <label className="text-xs text-gray-500">Email ID</label>
               <input
-                type="contactEmail"
+                type="email"
                 placeholder="contact@company.com"
                 className="w-full border rounded p-2 mt-1"
                 value={form.contactEmail}
@@ -257,11 +215,8 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* AUTH SIGNATORY */}
             <div className="col-span-2 border-t pt-2 mt-2">
-              <h4 className="text-xs font-bold text-indigo-600">
-                Authorized Signatory (OTP)
-              </h4>
+              <h4 className="text-xs font-bold text-indigo-600">Authorized Signatory (OTP)</h4>
             </div>
 
             <div className="col-span-2">
@@ -294,11 +249,8 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* PORTAL CREDENTIALS */}
             <div className="col-span-2 border-t pt-2 mt-2">
-              <h4 className="text-xs font-bold text-indigo-600">
-                Portal Credentials
-              </h4>
+              <h4 className="text-xs font-bold text-indigo-600">Portal Credentials</h4>
             </div>
 
             <div>
@@ -341,7 +293,6 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* DSC */}
             <div className="col-span-2 border-t pt-2 mt-2">
               <h4 className="text-xs font-bold text-indigo-600">DSC Info</h4>
             </div>
@@ -366,29 +317,18 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-            {/* SUBMIT */}
             <div className="col-span-2 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-600"
-              >
+              <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600">
                 Cancel
               </button>
-
               <button
                 type="submit"
                 disabled={loading}
                 className="px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
               >
-                {loading
-                  ? "Saving..."
-                  : client
-                    ? "Update Client"
-                    : "Save Client"}
+                {loading ? "Saving..." : client ? "Update Client" : "Save Client"}
               </button>
             </div>
-
           </form>
         </div>
       </div>
@@ -396,4 +336,3 @@ const handleSubmit = async (e) => {
     document.body
   );
 }
-
