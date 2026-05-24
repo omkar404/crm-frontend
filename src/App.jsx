@@ -21,7 +21,17 @@ export default function App() {
   return (
     <>
       <AppRouter />
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            zIndex: 2147483647,
+          },
+        }}
+        containerStyle={{
+          zIndex: 2147483647,
+        }}
+      />
     </>
   );
 }

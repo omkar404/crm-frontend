@@ -85,6 +85,7 @@ export default function ImportModal({
 
       const { imported = 0, skipped = 0, skippedDetails = [] } = response.data || {};
       setSkippedRows(skippedDetails);
+      onImported?.();
 
       if (imported > 0 && skipped === 0) {
         successToast(`Successfully imported ${imported} ${config.successLabel}`);
@@ -102,7 +103,6 @@ export default function ImportModal({
       if (skippedDetails.length === 0) {
         resetModalState();
         setOpen(false);
-        onImported?.();
       }
     } catch (err) {
       console.error(err);

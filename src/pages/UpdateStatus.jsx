@@ -12,7 +12,7 @@ import {
 import { updateStatusByEmail } from "../api/mailApi";
 import { successToast, errorToast } from "@/utils/customToast";
 
-const statusOptions = ["Reached", "Bounced", "stop", "Enquiry"];
+const statusOptions = ["Active", "Stop", "Enquiry - Call", "Enquiry - Mail", "Enquiry - WhatsApp"];
 
 export default function UpdateStatus() {
   const [email, setEmail] = useState("");

@@ -93,3 +93,17 @@ export const CITY_STATE_MAP = {
 };
 
 export const CITY_OPTIONS = Object.keys(CITY_STATE_MAP).sort((a, b) => a.localeCompare(b));
+
+const MANUAL_STATE_OPTIONS = [
+  "Andaman and Nicobar Islands",
+  "Dadra and Nagar Haveli",
+  "Daman and Diu",
+  "Ladakh",
+  "Lakshadweep",
+  "Manipur",
+  "Puducherry",
+];
+
+export const STATE_OPTIONS = [...new Set([...Object.values(CITY_STATE_MAP), ...MANUAL_STATE_OPTIONS])].sort((a, b) =>
+  a.localeCompare(b)
+);

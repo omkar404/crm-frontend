@@ -19,7 +19,7 @@ import {
 import api from "../api/axios";
 import { errorToast, successToast } from "@/utils/customToast";
 import useMailStore from "../store/mailStore";
-import { CITY_OPTIONS, CITY_STATE_MAP } from "../constants/locationOptions";
+import { CITY_OPTIONS } from "../constants/locationOptions";
 
 const MAIL_STATUS_OPTIONS = [
   "draft",
@@ -93,7 +93,27 @@ const YES_NO_OPTIONS = ["Yes", "No"];
 const VERIFY_OPTIONS = ["ok", "invalid", "pending"];
 const IP_ADDRESS_OPTIONS = ["Shruti", "Menka", "Raksha", "Ritesh"];
 const WEB_SOURCE_OPTIONS = ["Edge", "Chrome", "Mozilla"];
-const STATE_OPTIONS = [...new Set(Object.values(CITY_STATE_MAP))].sort((a, b) => a.localeCompare(b));
+const EMAIL_VERIFIED_STATUS_OPTIONS = ["Yes", "No", "Incorrect"];
+const SENDER_EMAIL_OPTIONS = [
+  "jaggdish@eximinq-connect.in",
+  "jaggdish@eximinq-audit.in",
+  "jaggdish@eximinq-group.in",
+  "jaggdish@eximinq-info.in",
+  "jaggdish.a@eximinq-advisory.in",
+  "jaggdish.acharya@eximinq-global.in",
+  "j.acharya@eximinq-desk.in",
+  "jaggdish.a@eximinq-exim.in",
+  "jaggdish.acharya@eximinq-services.in",
+  "Blank",
+];
+const WIFI_OPTIONS = ["raksha", "shruti", "menka", "Blank"];
+const BROWSER_OPTIONS = ["chrome", "edge", "mozila", "Blank"];
+const EMAIL_TEMPLATE_OPTIONS = ["A", "B", "C"];
+const EMAIL_SUBJECT_OPTIONS = ["1", "2", "3", "4"];
+const EMAIL_SEEN_OPTIONS = ["Yes", "No"];
+const EMAIL_STATUS_OPTIONS = ["Active", "Stop", "Enquiry - Call", "Enquiry - Mail", "Enquiry - WhatsApp"];
+const ENQUIRY_STATUS_OPTIONS = ["Pending", "Reverted", "Close", "No Revert"];
+const TURNUP_OPTIONS = ["Yes", "No"];
 const INDUSTRY_MAP = {
   "Agriculture & Farming": ["Farming Crops", "Livestock & Dairy", "Forestry & Logging", "Fishing & Aquaculture"],
   "Mining & Quarrying": ["Coal / Lignite", "Crude Petroleum / Natural Gas", "Iron Ore", "Metallic Minerals", "Stone Quarrying"],
@@ -161,6 +181,19 @@ const emptyForm = {
   webSource: "",
   emailSent: "",
   verifyEmail: "",
+  senderEmail: "",
+  emailVerifiedStatus: "",
+  wifi: "",
+  browser: "",
+  emailSentOn: "",
+  emailTemplate: "",
+  emailSubjectCode: "",
+  emailSeen: "",
+  emailStatus: "",
+  enquiryStatus: "",
+  turnup: "",
+  cdcrNo: "",
+  cdcrCreation: "",
   status: "draft",
   notes: "",
   description: "",
@@ -204,6 +237,19 @@ const mapMailToForm = (mail = {}) => ({
   sourceDate: toDateInput(mail.sourceDate || mail.Date),
   ipAddress: mail.ipAddress || mail["IP Address"] || "",
   webSource: mail.webSource || mail.Web || "",
+  senderEmail: mail.senderEmail || "",
+  emailVerifiedStatus: mail.emailVerifiedStatus || "",
+  wifi: mail.wifi || "",
+  browser: mail.browser || "",
+  emailSentOn: toDateInput(mail.emailSentOn || mail.sourceDate || mail.Date),
+  emailTemplate: mail.emailTemplate || mail.templateName || mail.Template || "",
+  emailSubjectCode: mail.emailSubjectCode || "",
+  emailSeen: mail.emailSeen || "",
+  emailStatus: mail.emailStatus || "",
+  enquiryStatus: mail.enquiryStatus || "",
+  turnup: mail.turnup || "",
+  cdcrNo: mail.cdcrNo || "",
+  cdcrCreation: toDateInput(mail.cdcrCreation),
   emailSent:
     mail.emailSent === true || mail["Email sent"] === "Yes"
       ? "Yes"
@@ -257,6 +303,19 @@ const buildPayload = (form) => ({
   priorityRating: form.priorityRating || undefined,
   leadSource: form.leadSource || undefined,
   leadStatus: form.leadStatus || undefined,
+  senderEmail: form.senderEmail || "",
+  emailVerifiedStatus: form.emailVerifiedStatus || "",
+  wifi: form.wifi || "",
+  browser: form.browser || "",
+  emailSentOn: form.emailSentOn || undefined,
+  emailTemplate: form.emailTemplate || form.template || "",
+  emailSubjectCode: form.emailSubjectCode || "",
+  emailSeen: form.emailSeen || "",
+  emailStatus: form.emailStatus || "",
+  enquiryStatus: form.enquiryStatus || "",
+  turnup: form.turnup || "",
+  cdcrNo: form.cdcrNo || "",
+  cdcrCreation: form.cdcrCreation || undefined,
   sourceDate: form.sourceDate || undefined,
   emailVerified:
     form.verifyEmail === "ok" ? true : form.verifyEmail === "invalid" ? false : undefined,
@@ -297,9 +356,20 @@ export default function MailFormModal({
   viewMode = false,
   setViewMode = () => {},
 }) {
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState("mailer");
   const [form, setForm] = useState(emptyForm);
   const { filterOptions, loadFilterOptions } = useMailStore();
+  const emailSentDependencies = {
+    "jaggdish@eximinq-connect.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish@eximinq-audit.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish@eximinq-group.in": { wifi: "menka", browser: "mozila" },
+    "jaggdish@eximinq-info.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish.a@eximinq-advisory.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish.acharya@eximinq-global.in": { wifi: "menka", browser: "mozila" },
+    "j.acharya@eximinq-desk.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish.a@eximinq-exim.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish.acharya@eximinq-services.in": { wifi: "menka", browser: "mozila" },
+  };
 
   const ipAddressOptions = useMemo(
     () => (filterOptions?.ipAddress?.length ? filterOptions.ipAddress : IP_ADDRESS_OPTIONS),
@@ -309,11 +379,15 @@ export default function MailFormModal({
     () => (filterOptions?.webTabAndType?.length ? filterOptions.webTabAndType : WEB_SOURCE_OPTIONS),
     [filterOptions]
   );
+  const senderEmailOptions = useMemo(
+    () => (filterOptions?.sendEmailId?.length ? filterOptions.sendEmailId : SENDER_EMAIL_OPTIONS),
+    [filterOptions]
+  );
 
   useEffect(() => {
     if (open) {
       setForm(editMail ? mapMailToForm(editMail) : emptyForm);
-      setActiveTab("basic");
+      setActiveTab("mailer");
       loadFilterOptions();
     }
   }, [open, editMail, loadFilterOptions]);
@@ -335,7 +409,6 @@ export default function MailFormModal({
     setForm((prev) => ({
       ...prev,
       city: value,
-      state: CITY_STATE_MAP[value] || prev.state,
     }));
   };
 
@@ -381,11 +454,183 @@ export default function MailFormModal({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3">
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="mailer">Mailer</TabsTrigger>
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="business">Business Details</TabsTrigger>
-            <TabsTrigger value="mail">Mail Metadata</TabsTrigger>
+            <TabsTrigger value="notes">Notes & Description</TabsTrigger>
           </TabsList>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-sky-200 bg-sky-50/80 p-4">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Name
+              </Label>
+              <Input
+                disabled
+                value={form.name || ""}
+                className="mt-2 border-sky-200 bg-white"
+                placeholder="To be pulled from Tab 1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Email ID
+              </Label>
+              <Input
+                disabled
+                value={form.email || ""}
+                className="mt-2 border-sky-200 bg-white"
+                placeholder="To be pulled from Tab 1"
+              />
+            </div>
+          </div>
+
+          <TabsContent value="mailer">
+            <div className="grid max-h-[55vh] grid-cols-2 gap-4 overflow-y-auto pt-4">
+              <div>
+                <Label>Email ID</Label>
+                <Input
+                  disabled
+                  type="email"
+                  value={form.email}
+                  className="mt-1"
+                  placeholder="To be pulled from Tab 1"
+                />
+              </div>
+              <div>
+                <Label>Email Verified</Label>
+                <SelectField
+                  label=" "
+                  value={form.emailVerifiedStatus}
+                  onChange={(value) => setForm((prev) => ({ ...prev, emailVerifiedStatus: value }))}
+                  options={EMAIL_VERIFIED_STATUS_OPTIONS}
+                  disabled={viewMode}
+                  placeholder="Select Email Verified"
+                />
+              </div>
+              <SelectField
+                label="Email Sent"
+                value={form.senderEmail}
+                onChange={(value) => {
+                  const mapping = emailSentDependencies[value] || { wifi: "", browser: "" };
+                  setForm((prev) => ({
+                    ...prev,
+                    senderEmail: value,
+                    from: value,
+                    wifi: mapping.wifi,
+                    ipAddress: mapping.wifi,
+                    browser: mapping.browser,
+                    webSource: mapping.browser,
+                  }));
+                }}
+                options={senderEmailOptions}
+                disabled={viewMode}
+                placeholder="Select Sender Email"
+              />
+              <div>
+                <Label>Browser</Label>
+                <Input
+                  disabled
+                  value={form.browser || ""}
+                  className="mt-1"
+                  placeholder="To be pulled from Email Sent"
+                />
+              </div>
+              <div>
+                <Label>WIFI</Label>
+                <Input
+                  disabled
+                  value={form.wifi || ""}
+                  className="mt-1"
+                  placeholder="To be pulled from Email Sent"
+                />
+              </div>
+              <div>
+                <Label>Email Sent On</Label>
+                <Input
+                  disabled={viewMode}
+                  type="date"
+                  value={form.emailSentOn}
+                  onChange={(e) => setForm((prev) => ({ ...prev, emailSentOn: e.target.value, sourceDate: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              <SelectField
+                label="Email Template"
+                value={form.emailTemplate}
+                onChange={(value) => setForm((prev) => ({ ...prev, emailTemplate: value, template: value }))}
+                options={EMAIL_TEMPLATE_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Email Template"
+              />
+              <SelectField
+                label="Email Subject"
+                value={form.emailSubjectCode}
+                onChange={(value) => setForm((prev) => ({ ...prev, emailSubjectCode: value, subject: value }))}
+                options={EMAIL_SUBJECT_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Email Subject"
+              />
+              <SelectField
+                label="Email Seen"
+                value={form.emailSeen}
+                onChange={(value) => setForm((prev) => ({ ...prev, emailSeen: value }))}
+                options={EMAIL_SEEN_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Email Seen"
+              />
+              <SelectField
+                label="Email Status"
+                value={form.emailStatus}
+                onChange={(value) => setForm((prev) => ({ ...prev, emailStatus: value }))}
+                options={EMAIL_STATUS_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Email Status"
+              />
+              <SelectField
+                label="Enquiry Status"
+                value={form.enquiryStatus}
+                onChange={(value) => setForm((prev) => ({ ...prev, enquiryStatus: value }))}
+                options={ENQUIRY_STATUS_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Enquiry Status"
+              />
+              <SelectField
+                label="Turnup"
+                value={form.turnup}
+                onChange={(value) => setForm((prev) => ({ ...prev, turnup: value }))}
+                options={TURNUP_OPTIONS}
+                disabled={viewMode}
+                placeholder="Select Turnup"
+              />
+              <div>
+                <Label>CDCR NO</Label>
+                <Input
+                  disabled={viewMode}
+                  value={form.cdcrNo}
+                  onChange={(e) => setForm((prev) => ({ ...prev, cdcrNo: e.target.value }))}
+                  className="mt-1"
+                  placeholder="Enter CDCR No"
+                />
+              </div>
+              <div>
+                <Label>CDCR Creation</Label>
+                <Input
+                  disabled={viewMode}
+                  type="date"
+                  value={form.cdcrCreation}
+                  onChange={(e) => setForm((prev) => ({ ...prev, cdcrCreation: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button onClick={() => setActiveTab("basic")} className="bg-blue-600 hover:bg-blue-700">
+                Next
+              </Button>
+            </div>
+          </TabsContent>
 
           <TabsContent value="basic">
             <div className="grid max-h-[55vh] grid-cols-2 gap-4 overflow-y-auto pt-4">
@@ -400,27 +645,6 @@ export default function MailFormModal({
                 />
               </div>
               <div>
-                <Label>Sender Email</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.from}
-                  onChange={(e) => setForm((prev) => ({ ...prev, from: e.target.value }))}
-                  className="mt-1"
-                  placeholder="Enter sender email ID"
-                />
-              </div>
-              <div>
-                <Label>Recipient / Contact Email</Label>
-                <Input
-                  disabled={viewMode}
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  className="mt-1"
-                  placeholder="Enter recipient email"
-                />
-              </div>
-              <div>
                 <Label>Mobile No</Label>
                 <Input
                   disabled={viewMode}
@@ -428,6 +652,17 @@ export default function MailFormModal({
                   onChange={(e) => setForm((prev) => ({ ...prev, mobileNo: e.target.value }))}
                   className="mt-1"
                   placeholder="Enter mobile number"
+                />
+              </div>
+              <div>
+                <Label>Email ID</Label>
+                <Input
+                  disabled={viewMode}
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                  className="mt-1"
+                  placeholder="Enter email ID"
                 />
               </div>
               <div>
@@ -468,14 +703,16 @@ export default function MailFormModal({
                 disabled={viewMode}
                 placeholder="Select city"
               />
-              <SelectField
-                label="State"
-                value={form.state}
-                onChange={(value) => setForm((prev) => ({ ...prev, state: value }))}
-                options={STATE_OPTIONS}
-                disabled={viewMode}
-                placeholder="Auto-selected from city"
-              />
+              <div>
+                <Label>State</Label>
+                <Input
+                  disabled={viewMode}
+                  value={form.state}
+                  onChange={(e) => setForm((prev) => ({ ...prev, state: e.target.value }))}
+                  className="mt-1"
+                  placeholder="Enter state"
+                />
+              </div>
               <div>
                 <Label>Pin Code</Label>
                 <Input
@@ -617,76 +854,14 @@ export default function MailFormModal({
               <Button variant="outline" onClick={() => setActiveTab("basic")}>
                 Back
               </Button>
-              <Button onClick={() => setActiveTab("mail")} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={() => setActiveTab("notes")} className="bg-blue-600 hover:bg-blue-700">
                 Next
               </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="mail">
+          <TabsContent value="notes">
             <div className="grid max-h-[55vh] grid-cols-2 gap-4 overflow-y-auto pt-4">
-              <SelectField
-                label="Template"
-                value={form.template}
-                onChange={(value) => setForm((prev) => ({ ...prev, template: value }))}
-                options={TEMPLATE_OPTIONS}
-                disabled={viewMode}
-              />
-              <div>
-                <Label>Subject</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.subject}
-                  onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
-                  className="mt-1"
-                  placeholder="Enter template subject"
-                />
-              </div>
-              <SelectField
-                label="Mail Status"
-                value={form.status}
-                onChange={(value) => setForm((prev) => ({ ...prev, status: value }))}
-                options={MAIL_STATUS_OPTIONS}
-                disabled={viewMode}
-              />
-              <div>
-                <Label>Source Date</Label>
-                <Input
-                  disabled={viewMode}
-                  type="date"
-                  value={form.sourceDate}
-                  onChange={(e) => setForm((prev) => ({ ...prev, sourceDate: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <SelectField
-                label="IP Address"
-                value={form.ipAddress}
-                onChange={(value) => setForm((prev) => ({ ...prev, ipAddress: value }))}
-                options={ipAddressOptions}
-                disabled={viewMode}
-              />
-              <SelectField
-                label="Web Source"
-                value={form.webSource}
-                onChange={(value) => setForm((prev) => ({ ...prev, webSource: value }))}
-                options={webSourceOptions}
-                disabled={viewMode}
-              />
-              <SelectField
-                label="Email Sent"
-                value={form.emailSent}
-                onChange={(value) => setForm((prev) => ({ ...prev, emailSent: value }))}
-                options={YES_NO_OPTIONS}
-                disabled={viewMode}
-              />
-              <SelectField
-                label="Verify Email"
-                value={form.verifyEmail}
-                onChange={(value) => setForm((prev) => ({ ...prev, verifyEmail: value }))}
-                options={VERIFY_OPTIONS}
-                disabled={viewMode}
-              />
               <div className="col-span-2">
                 <Label>Notes</Label>
                 <textarea

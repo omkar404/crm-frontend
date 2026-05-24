@@ -28,6 +28,7 @@ import {
   Mail,
   Phone,
   Download,
+  Copy,
 } from "lucide-react";
 import LeadFormModal from "../components/LeadFormModal";
 import ImportModal from "../components/ImportModal";
@@ -441,6 +442,35 @@ export default function LeadTable() {
   // helpers to render arrow
   const renderArrow = (field) =>
     sortField === field ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
+
+  const copyToClipboard = async (value, label) => {
+    const text = String(value || "").trim();
+    if (!text || text === "—") {
+      errorToast(`No ${label.toLowerCase()} available to copy`);
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "absolute";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+
+      successToast(`${label} copied`);
+    } catch (error) {
+      errorToast(`Unable to copy ${label.toLowerCase()}`);
+    }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex justify-between items-center" ref={dropdownRef}>
@@ -746,11 +776,26 @@ export default function LeadTable() {
                       <TableCell>{l.idNo}</TableCell>
 
                       <TableCell>
-                        <div
-                          dangerouslySetInnerHTML={{
-                            __html: highlight(l.name || "", q),
-                          }}
-                        />
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="min-w-0 flex-1"
+                            dangerouslySetInnerHTML={{
+                              __html: highlight(l.name || "", q),
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(l.name, "Name");
+                            }}
+                            className="rounded p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                            title="Copy name"
+                            aria-label="Copy name"
+                          >
+                            <Copy size={15} />
+                          </button>
+                        </div>
                       </TableCell>
 
                       <TableCell>

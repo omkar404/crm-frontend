@@ -187,6 +187,19 @@ import {
   fetchFilterOptions,
 } from "../api/mailApi";
 
+const EMAIL_SENT_FILTER_OPTIONS = [
+  "jaggdish@eximinq-connect.in",
+  "jaggdish@eximinq-audit.in",
+  "jaggdish@eximinq-group.in",
+  "jaggdish@eximinq-info.in",
+  "jaggdish.a@eximinq-advisory.in",
+  "jaggdish.acharya@eximinq-global.in",
+  "j.acharya@eximinq-desk.in",
+  "jaggdish.a@eximinq-exim.in",
+  "jaggdish.acharya@eximinq-services.in",
+  "Blank",
+];
+
 const MAIL_EXPORT_HEADERS = [
   "Sr No",
   "name",
@@ -249,18 +262,18 @@ const useMailStore = create((set, get) => ({
   search: "",
 
   // filter states
-  sendEmailId: [],
-  templateType: "",
-  templateSubject: "",
-  emailDate: "",
-  ipAddress: "",
-  webTabAndType: "",
+  leadSource: "",
   emailVerified: "",
-  emailSentType: "",
-  statusFilter: "",
+  emailSent: "",
+  emailSeen: "",
+  emailStatus: "",
+  enquiryStatus: "",
+  turnup: "",
+  cdcrNo: "",
 
   // filter options (populated from backend)
   filterOptions: {
+    leadSource: [],
     sendEmailId: [],
     templateType: [],
     templateSubject: [],
@@ -268,7 +281,12 @@ const useMailStore = create((set, get) => ({
     ipAddress: [],
     webTabAndType: [],
     emailVerified: [],
-    emailSentType: [],
+    emailSent: [...EMAIL_SENT_FILTER_OPTIONS],
+    emailSeen: [],
+    emailStatus: [],
+    enquiryStatus: [],
+    turnup: [],
+    cdcrNo: [],
     status: [],
   },
   filterOptionsLoaded: false,
@@ -295,15 +313,14 @@ const useMailStore = create((set, get) => ({
         page: state.page,
         limit: state.limit,
         search: state.search,
-        sendEmailId: state.sendEmailId,
-        templateType: state.templateType,
-        templateSubject: state.templateSubject,
-        emailDate: state.emailDate,
-        ipAddress: state.ipAddress,
-        webTabAndType: state.webTabAndType,
+        leadSource: state.leadSource,
         emailVerified: state.emailVerified,
-        emailSentType: state.emailSentType,
-        status: state.statusFilter,
+        emailSent: state.emailSent,
+        emailSeen: state.emailSeen,
+        emailStatus: state.emailStatus,
+        enquiryStatus: state.enquiryStatus,
+        turnup: state.turnup,
+        cdcrNo: state.cdcrNo,
         includeFilters: !state.filterOptionsLoaded,
       });
       if (get().latestListRequestId !== requestId) {
@@ -314,7 +331,10 @@ const useMailStore = create((set, get) => ({
         leads: res.data || [],
         total: res.total || 0,
         loading: false,
-        filterOptions: res.filterOptions || state.filterOptions,
+        filterOptions: {
+          ...(res.filterOptions || state.filterOptions),
+          emailSent: [...EMAIL_SENT_FILTER_OPTIONS],
+        },
         filterOptionsLoaded: Boolean(res.filterOptions) || state.filterOptionsLoaded,
       });
     } catch (err) {
@@ -336,29 +356,27 @@ const useMailStore = create((set, get) => ({
   },
 
   // filter setters (each triggers reload)
-  setSendEmailId: (value) => { set({ sendEmailId: Array.isArray(value) ? value : [], page: 1 }); get().loadLeads(); },
-  setTemplateType: (value) => { set({ templateType: value, page: 1 }); get().loadLeads(); },
-  setTemplateSubject: (value) => { set({ templateSubject: value, page: 1 }); get().loadLeads(); },
-  setEmailDate: (value) => { set({ emailDate: value, page: 1 }); get().loadLeads(); },
-  setIpAddress: (value) => { set({ ipAddress: value, page: 1 }); get().loadLeads(); },
-  setWebTabAndType: (value) => { set({ webTabAndType: value, page: 1 }); get().loadLeads(); },
+  setLeadSource: (value) => { set({ leadSource: value, page: 1 }); get().loadLeads(); },
   setEmailVerified: (value) => { set({ emailVerified: value, page: 1 }); get().loadLeads(); },
-  setEmailSentType: (value) => { set({ emailSentType: value, page: 1 }); get().loadLeads(); },
-  setStatusFilter: (value) => { set({ statusFilter: value, page: 1 }); get().loadLeads(); },
+  setEmailSent: (value) => { set({ emailSent: value || "", page: 1 }); get().loadLeads(); },
+  setEmailSeen: (value) => { set({ emailSeen: value, page: 1 }); get().loadLeads(); },
+  setEmailStatus: (value) => { set({ emailStatus: value, page: 1 }); get().loadLeads(); },
+  setEnquiryStatus: (value) => { set({ enquiryStatus: value, page: 1 }); get().loadLeads(); },
+  setTurnup: (value) => { set({ turnup: value, page: 1 }); get().loadLeads(); },
+  setCdcrNo: (value) => { set({ cdcrNo: value, page: 1 }); get().loadLeads(); },
 
   clearFilters: () => {
     clearTimeout(searchTimer);
     set({
       search: "",
-      sendEmailId: [],
-      templateType: "",
-      templateSubject: "",
-      emailDate: "",
-      ipAddress: "",
-      webTabAndType: "",
+      leadSource: "",
       emailVerified: "",
-      emailSentType: "",
-      statusFilter: "",
+      emailSent: "",
+      emailSeen: "",
+      emailStatus: "",
+      enquiryStatus: "",
+      turnup: "",
+      cdcrNo: "",
       page: 1,
     });
     get().loadLeads();
@@ -372,7 +390,14 @@ const useMailStore = create((set, get) => ({
     set({ filterOptionsLoading: true });
     try {
       const data = await fetchFilterOptions();
-      set({ filterOptions: data, filterOptionsLoading: false, filterOptionsLoaded: true });
+      set({
+        filterOptions: {
+          ...data,
+          emailSent: [...EMAIL_SENT_FILTER_OPTIONS],
+        },
+        filterOptionsLoading: false,
+        filterOptionsLoaded: true,
+      });
     } catch (err) {
       console.error("Filter options error:", err);
       set({ filterOptionsLoading: false });
@@ -418,27 +443,25 @@ const useMailStore = create((set, get) => ({
   exportCSV: async () => {
     const {
       search,
-      sendEmailId,
-      templateType,
-      templateSubject,
-      emailDate,
-      ipAddress,
-      webTabAndType,
+      leadSource,
       emailVerified,
-      emailSentType,
-      statusFilter,
+      emailSent,
+      emailSeen,
+      emailStatus,
+      enquiryStatus,
+      turnup,
+      cdcrNo,
     } = get();
     let data = await exportMailLeadsCSV({
       search,
-      sendEmailId,
-      templateType,
-      templateSubject,
-      emailDate,
-      ipAddress,
-      webTabAndType,
+      leadSource,
       emailVerified,
-      emailSentType,
-      status: statusFilter,
+      emailSent,
+      emailSeen,
+      emailStatus,
+      enquiryStatus,
+      turnup,
+      cdcrNo,
     });
     if (!data.length) return;
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import api from "../api/axios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -364,7 +364,7 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            <div className="h-[290px]">
+            <MeasuredChart className="h-[290px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={activeTrend}>
                   <defs>
@@ -392,7 +392,7 @@ export default function Dashboard() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
+            </MeasuredChart>
           </CardContent>
         </Card>
 
@@ -414,7 +414,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="h-[210px]">
+                <MeasuredChart className="h-[210px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={activeStatuses}>
                       <CartesianGrid stroke="rgba(94,106,115,0.08)" vertical={false} />
@@ -429,7 +429,7 @@ export default function Dashboard() {
                       <Bar dataKey="value" radius={[10, 10, 0, 0]} fill={viewTheme.stroke} />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </MeasuredChart>
 
                 <div className="space-y-3">
                   {activeStatuses.slice(0, 4).map((item) => (
@@ -466,5 +466,40 @@ function ViewButton({ active, activeClassName, inactiveClassName, title, subtitl
       <div className="text-sm font-semibold">{title}</div>
       <div className={`mt-1 text-xs ${active ? "text-white/72" : "text-slate-500"}`}>{subtitle}</div>
     </button>
+  );
+}
+
+function MeasuredChart({ className, children }) {
+  const containerRef = useRef(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = containerRef.current;
+    if (!node) {
+      return undefined;
+    }
+
+    const updateSize = () => {
+      const hasSize = node.clientWidth > 0 && node.clientHeight > 0;
+      setIsReady(hasSize);
+    };
+
+    updateSize();
+
+    const observer = new ResizeObserver(() => {
+      updateSize();
+    });
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className={className}>
+      {isReady ? children : null}
+    </div>
   );
 }

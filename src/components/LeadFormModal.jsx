@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { successToast, errorToast } from "@/utils/customToast";
 import api from "../api/axios";
-import { CITY_OPTIONS, CITY_STATE_MAP } from "../constants/locationOptions";
+import { CITY_OPTIONS } from "../constants/locationOptions";
 
 const emptyForm = {
   idNo: "",
@@ -47,6 +47,19 @@ const emptyForm = {
   priorityRating: "",
   leadSource: "",
   leadStatus: "",
+  senderEmail: "",
+  emailVerifiedStatus: "",
+  wifi: "",
+  browser: "",
+  emailSentOn: "",
+  emailTemplate: "",
+  emailSubjectCode: "",
+  emailSeen: "",
+  emailStatus: "",
+  enquiryStatus: "",
+  turnup: "",
+  cdcrNo: "",
+  cdcrCreation: "",
   description: "",
   notes: "",
 };
@@ -61,6 +74,17 @@ export default function LeadFormModal({
 }) {
   const [activeTab, setActiveTab] = useState("basic");
   const [form, setForm] = useState(emptyForm);
+  const emailSentDependencies = {
+    "jaggdish@eximinq-connect.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish@eximinq-audit.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish@eximinq-group.in": { wifi: "menka", browser: "mozila" },
+    "jaggdish@eximinq-info.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish.a@eximinq-advisory.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish.acharya@eximinq-global.in": { wifi: "menka", browser: "mozila" },
+    "j.acharya@eximinq-desk.in": { wifi: "raksha", browser: "chrome" },
+    "jaggdish.a@eximinq-exim.in": { wifi: "shruti", browser: "edge" },
+    "jaggdish.acharya@eximinq-services.in": { wifi: "menka", browser: "mozila" },
+  };
 
   useEffect(() => {
     if (open) {
@@ -138,10 +162,27 @@ export default function LeadFormModal({
     "Spam / Fake Lead",
     "Do Not Touch",
   ];
-  const stateList = [
-    ...new Set(Object.values(CITY_STATE_MAP)),
-  ].sort((a, b) => a.localeCompare(b));
-
+  const emailVerifiedList = ["Yes", "No", "Incorrect"];
+  const senderEmailList = [
+    "jaggdish@eximinq-connect.in",
+    "jaggdish@eximinq-audit.in",
+    "jaggdish@eximinq-group.in",
+    "jaggdish@eximinq-info.in",
+    "jaggdish.a@eximinq-advisory.in",
+    "jaggdish.acharya@eximinq-global.in",
+    "j.acharya@eximinq-desk.in",
+    "jaggdish.a@eximinq-exim.in",
+    "jaggdish.acharya@eximinq-services.in",
+    "Blank",
+  ];
+  const wifiList = ["raksha", "shruti", "menka", "Blank"];
+  const browserList = ["chrome", "edge", "mozila", "Blank"];
+  const emailTemplateList = ["A", "B", "C"];
+  const emailSubjectCodeList = ["1", "2", "3", "4"];
+  const emailSeenList = ["Yes", "No"];
+  const emailStatusList = ["Active", "Stop", "Enquiry - Call", "Enquiry - Mail", "Enquiry - WhatsApp"];
+  const enquiryStatusList = ["Pending", "Reverted", "Close", "No Revert"];
+  const turnupList = ["Yes", "No"];
   const industryList = [
     "Agriculture, Forestry, and Fishing",
     "Coal and lignite",
@@ -286,7 +327,6 @@ export default function LeadFormModal({
     setForm((prev) => ({
       ...prev,
       city,
-      state: CITY_STATE_MAP[city] || prev.state,
     }));
   };
 
@@ -339,12 +379,38 @@ export default function LeadFormModal({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="mb-4 grid grid-cols-3 gap-2">
-            <TabsList className="col-span-3 grid grid-cols-3">
+          <div className="mb-4 grid grid-cols-4 gap-2">
+            <TabsList className="col-span-4 grid grid-cols-4">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="business">Business Details</TabsTrigger>
+              <TabsTrigger value="emailer">Emailer</TabsTrigger>
               <TabsTrigger value="notes">Notes & Description</TabsTrigger>
             </TabsList>
+          </div>
+
+          <div className="mb-4 grid grid-cols-2 gap-4 rounded-xl border border-sky-200 bg-sky-50/80 p-4">
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Name
+              </Label>
+              <Input
+                disabled
+                value={form.name || ""}
+                className="mt-2 border-sky-200 bg-white"
+                placeholder="To be pulled from Tab 1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Email ID
+              </Label>
+              <Input
+                disabled
+                value={form.email || ""}
+                className="mt-2 border-sky-200 bg-white"
+                placeholder="To be pulled from Tab 1"
+              />
+            </div>
           </div>
 
           <TabsContent value="basic">
@@ -378,16 +444,14 @@ export default function LeadFormModal({
               </div>
 
               <div>
-                <Label>
-                  Email <span className="text-red-500">*</span>
-                </Label>
+                <Label>Email ID</Label>
                 <Input
                   disabled={viewMode}
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="mt-1"
-                  placeholder="Enter email address"
+                  placeholder="Enter email ID"
                 />
               </div>
 
@@ -401,19 +465,6 @@ export default function LeadFormModal({
                   }
                   className="mt-1"
                   placeholder="Enter landline number"
-                />
-              </div>
-
-              <div>
-                <Label>Website</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.website}
-                  onChange={(e) =>
-                    setForm({ ...form, website: e.target.value })
-                  }
-                  className="mt-1"
-                  placeholder="Enter website URL"
                 />
               </div>
 
@@ -459,16 +510,13 @@ export default function LeadFormModal({
 
               <div>
                 <Label>State</Label>
-                {viewMode ? (
-                  <Input disabled value={form.state} className="mt-1" />
-                ) : (
-                  renderSelect(
-                    form.state,
-                    (v) => setForm({ ...form, state: v }),
-                    stateList,
-                    "Auto-selected from city"
-                  )
-                )}
+                <Input
+                  disabled={viewMode}
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                  className="mt-1"
+                  placeholder="Enter state"
+                />
               </div>
 
               <div>
@@ -481,32 +529,6 @@ export default function LeadFormModal({
                   }
                   className="mt-1"
                   placeholder="Enter pin code"
-                />
-              </div>
-
-              <div>
-                <Label>Contact Person</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.contactPerson}
-                  onChange={(e) =>
-                    setForm({ ...form, contactPerson: e.target.value })
-                  }
-                  className="mt-1"
-                  placeholder="Enter contact person"
-                />
-              </div>
-
-              <div>
-                <Label>Designation</Label>
-                <Input
-                  disabled={viewMode}
-                  value={form.designation}
-                  onChange={(e) =>
-                    setForm({ ...form, designation: e.target.value })
-                  }
-                  className="mt-1"
-                  placeholder="Enter designation"
                 />
               </div>
 
@@ -777,6 +799,206 @@ export default function LeadFormModal({
                 Back
               </Button>
               <Button
+                onClick={() => setActiveTab("emailer")}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Next
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="emailer">
+            <div className="grid grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto">
+              <div>
+                <Label>Email ID</Label>
+                <Input
+                  disabled
+                  type="email"
+                  value={form.email}
+                  className="mt-1"
+                  placeholder="To be pulled from Basic Info"
+                />
+              </div>
+
+              <div>
+                <Label>Email Verified</Label>
+                {viewMode ? (
+                  <Input disabled value={form.emailVerifiedStatus} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.emailVerifiedStatus,
+                    (v) => setForm({ ...form, emailVerifiedStatus: v }),
+                    emailVerifiedList,
+                    "Select Email Verified"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Email Sent</Label>
+                {viewMode ? (
+                  <Input disabled value={form.senderEmail} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.senderEmail,
+                    (v) => {
+                      const mapping = emailSentDependencies[v] || { wifi: "", browser: "" };
+                      setForm({
+                        ...form,
+                        senderEmail: v,
+                        wifi: mapping.wifi,
+                        browser: mapping.browser,
+                      });
+                    },
+                    senderEmailList,
+                    "Select Sender Email"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Browser</Label>
+                <Input
+                  disabled
+                  value={form.browser}
+                  className="mt-1"
+                  placeholder="To be pulled from Email Sent"
+                />
+              </div>
+
+              <div>
+                <Label>WIFI</Label>
+                <Input
+                  disabled
+                  value={form.wifi}
+                  className="mt-1"
+                  placeholder="To be pulled from Email Sent"
+                />
+              </div>
+
+              <div>
+                <Label>Email Sent On</Label>
+                <Input
+                  disabled={viewMode}
+                  type="date"
+                  value={form.emailSentOn ? String(form.emailSentOn).slice(0, 10) : ""}
+                  onChange={(e) => setForm({ ...form, emailSentOn: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Email Template</Label>
+                {viewMode ? (
+                  <Input disabled value={form.emailTemplate} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.emailTemplate,
+                    (v) => setForm({ ...form, emailTemplate: v }),
+                    emailTemplateList,
+                    "Select Email Template"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Email Subject</Label>
+                {viewMode ? (
+                  <Input disabled value={form.emailSubjectCode} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.emailSubjectCode,
+                    (v) => setForm({ ...form, emailSubjectCode: v }),
+                    emailSubjectCodeList,
+                    "Select Email Subject"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Email Seen</Label>
+                {viewMode ? (
+                  <Input disabled value={form.emailSeen} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.emailSeen,
+                    (v) => setForm({ ...form, emailSeen: v }),
+                    emailSeenList,
+                    "Select Email Seen"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Email Status</Label>
+                {viewMode ? (
+                  <Input disabled value={form.emailStatus} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.emailStatus,
+                    (v) => setForm({ ...form, emailStatus: v }),
+                    emailStatusList,
+                    "Select Email Status"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Enquiry Status</Label>
+                {viewMode ? (
+                  <Input disabled value={form.enquiryStatus} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.enquiryStatus,
+                    (v) => setForm({ ...form, enquiryStatus: v }),
+                    enquiryStatusList,
+                    "Select Enquiry Status"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>Turnup</Label>
+                {viewMode ? (
+                  <Input disabled value={form.turnup} className="mt-1" />
+                ) : (
+                  renderSelect(
+                    form.turnup,
+                    (v) => setForm({ ...form, turnup: v }),
+                    turnupList,
+                    "Select Turnup"
+                  )
+                )}
+              </div>
+
+              <div>
+                <Label>CDCR NO</Label>
+                <Input
+                  disabled={viewMode}
+                  value={form.cdcrNo}
+                  onChange={(e) => setForm({ ...form, cdcrNo: e.target.value })}
+                  className="mt-1"
+                  placeholder="Enter CDCR No"
+                />
+              </div>
+
+              <div>
+                <Label>CDCR Creation</Label>
+                <Input
+                  disabled={viewMode}
+                  type="date"
+                  value={form.cdcrCreation ? String(form.cdcrCreation).slice(0, 10) : ""}
+                  onChange={(e) => setForm({ ...form, cdcrCreation: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-4">
+              <Button variant="outline" onClick={() => setActiveTab("business")}>
+                Back
+              </Button>
+              <Button
                 onClick={() => setActiveTab("notes")}
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -816,7 +1038,7 @@ export default function LeadFormModal({
               <div className="flex justify-between mt-4">
                 <Button
                   variant="outline"
-                  onClick={() => setActiveTab("business")}
+                  onClick={() => setActiveTab("emailer")}
                 >
                   Back
                 </Button>

@@ -1,121 +1,124 @@
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { successToast, errorToast } from "@/utils/customToast";
+import { useState } from "react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+import AuthShell from "@/components/auth/AuthShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
-
-
-import Logo from "../assets/CRM.jpg"; // reuse same logo
+import { errorToast, successToast } from "@/utils/customToast";
+import Logo from "../assets/CRM.jpg";
 
 export default function WorkdeskLogin() {
   const navigate = useNavigate();
   const login = useWorkdeskAuthStore((state) => state.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // 🔒 Disable body scroll (same UX as CRM login)
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
+  const handleWorkdeskLogin = async (e) => {
+    e.preventDefault();
+    if (loading) return;
 
-const handleWorkdeskLogin = async (e) => {
-  e.preventDefault();
-  if (loading) return;
-
-  try {
-    setLoading(true);
-
-    await login({ email, password });
-
-    successToast("Workdesk login successful");
-    navigate("/workdesk/dashboard");
-
-  } catch (err) {
-    errorToast("Invalid Workdesk credentials");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      await login({ email, password });
+      successToast("Workdesk login successful");
+      navigate("/workdesk/dashboard");
+    } catch {
+      errorToast("Invalid Workdesk credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+    <AuthShell
+      eyebrow="Work Desk"
+      title="Welcome back"
+      description="Please enter your details to sign in."
+      badge="Workdesk operations access"
+      logo={Logo}
+      modeLabel="Workdesk Login"
+      supportLabel="Professional access to your operations workspace."
+    >
+      <form onSubmit={handleWorkdeskLogin} className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-700">Email Address</label>
+          <div className="relative">
+            <Mail
+              size={18}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <Input
+              type="email"
+              value={email}
+              placeholder="you@company.com"
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 rounded-2xl border-white/70 bg-[#fffdf8] pl-11 shadow-sm transition focus-visible:ring-2"
+              required
+            />
+          </div>
+        </div>
 
-      {/* LEFT PANEL */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-white overflow-hidden">
-        <img
-          src={Logo}
-          alt="Workdesk Logo"
-          className="w-[360px] object-contain select-none drop-shadow-lg"
-        />
-      </div>
-
-      {/* RIGHT PANEL */}
-      <div className="flex items-center justify-center bg-gray-50 overflow-hidden">
-        <div className="bg-white p-10 rounded-2xl shadow-2xl w-[380px] border border-gray-100">
-          <h2
-            className="
-              text-2xl font-bold text-center mb-6 tracking-tight
-              bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-500
-              bg-clip-text text-transparent
-            "
-          >
-            Workdesk Login
-          </h2>
-
-          <form onSubmit={handleWorkdeskLogin} className="space-y-5">
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Email Address
-              </label>
-              <Input
-                type="email"
-                value={email}
-                placeholder="you@company.com"
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">
-                Password
-              </label>
-              <Input
-                type="password"
-                value={password}
-                placeholder="••••••••"
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-600 hover:opacity-90 text-white"
-            >
-              {loading ? "Signing in..." : "Login to Workdesk"}
-            </Button>
-          </form>
-
-          {/* Back to CRM */}
-          <div className="mt-6 text-center">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-semibold text-slate-700">Password</label>
             <button
-              onClick={() => (window.location.href = "/")}
-              className="w-full h-12 mt-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:opacity-90 text-white"
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 transition hover:text-slate-800"
             >
-              Back to CRM Login
+              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          <div className="relative">
+            <LockKeyhole
+              size={18}
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              placeholder="Enter your password"
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-12 rounded-2xl border-white/70 bg-[#fffdf8] pl-11 pr-12 shadow-sm transition focus-visible:ring-2"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
+            >
+              {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-12 w-full rounded-2xl bg-[#16202A] text-base font-semibold text-white shadow-[0_18px_45px_rgba(22,32,42,0.22)] transition hover:bg-[#1d2a35]"
+        >
+          {loading ? "Signing in..." : "Enter Workdesk"}
+          {!loading ? <ArrowRight size={16} /> : null}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            window.location.href = "/";
+          }}
+          className="h-12 w-full rounded-2xl border-slate-200 bg-white/85 text-slate-700 transition hover:bg-white"
+        >
+          Back to CRM Login
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

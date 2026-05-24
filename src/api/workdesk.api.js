@@ -30,6 +30,11 @@ export const updateWorkdeskTaskStatusApi = async (taskId, status) => {
   return data;
 };
 
+export const updateWorkdeskTaskJobWorkApi = async (taskId, jobWorkStatus) => {
+  const { data } = await workdeskAxios.put(`/tasks/${taskId}/job-work`, { jobWorkStatus });
+  return data;
+};
+
 export const addWorkdeskTaskCommentApi = async (taskId, text) => {
   const { data } = await workdeskAxios.post(`/tasks/${taskId}/comments`, { text });
   return data;
@@ -50,8 +55,8 @@ export const raiseWorkdeskInvoiceApi = async (payload) => {
   return data;
 };
 
-export const payWorkdeskInvoiceApi = async (invoiceId) => {
-  const { data } = await workdeskAxios.put(`/invoices/${invoiceId}/pay`);
+export const payWorkdeskInvoiceApi = async (invoiceId, payload = {}) => {
+  const { data } = await workdeskAxios.put(`/invoices/${invoiceId}/pay`, payload);
   return data;
 };
 

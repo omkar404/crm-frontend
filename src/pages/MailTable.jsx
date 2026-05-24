@@ -1,4 +1,4 @@
-// // import React, { useEffect, useState, useRef } from "react";
+﻿// // import React, { useEffect, useState, useRef } from "react";
 // // import Swal from "sweetalert2";
 // // import { Button } from "@/components/ui/button";
 // // import { Input } from "@/components/ui/input";
@@ -13,9 +13,9 @@
 // // import useMailStore from "../store/mailStore";
 // // import { successToast, errorToast } from "@/utils/customToast";
 
-// // // ── Excel serial date → "9-Feb-26" format ─────────────────────────────────────
+// // // â”€â”€ Excel serial date â†’ "9-Feb-26" format â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // // function excelDateToString(serial) {
-// //   if (!serial || isNaN(serial)) return serial || "—";
+// //   if (!serial || isNaN(serial)) return serial || "â€”";
 // //   const date  = new Date((serial - 25569) * 86400 * 1000);
 // //   const day   = date.getUTCDate();
 // //   const month = date.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
@@ -109,7 +109,7 @@
 // //   return (
 // //     <div className="space-y-4 p-4">
 
-// //       {/* ── Top Bar ── */}
+// //       {/* â”€â”€ Top Bar â”€â”€ */}
 // //       <div className="flex justify-between items-center" ref={dropdownRef}>
 // //         <div className="flex items-center gap-3">
 // //           <Input
@@ -130,7 +130,7 @@
 // //         </div>
 // //       </div>
 
-// //       {/* ── Selected bar ── */}
+// //       {/* â”€â”€ Selected bar â”€â”€ */}
 // //       {selectedIds.length > 0 && (
 // //         <div className="flex items-center gap-3 bg-blue-50 p-3 rounded border">
 // //           <span className="font-semibold">{selectedIds.length} selected</span>
@@ -138,13 +138,13 @@
 // //         </div>
 // //       )}
 
-// //       {/* ── Filters ── */}
+// //       {/* â”€â”€ Filters â”€â”€ */}
 // //       {showFilters && <MailFilters onClose={() => setShowFilters(false)} />}
 
-// //       {/* ── Modal ── */}
+// //       {/* â”€â”€ Modal â”€â”€ */}
 // //       <MailFormModal />
 
-// //       {/* ── Table ── */}
+// //       {/* â”€â”€ Table â”€â”€ */}
 // //       <div className="bg-white border rounded-lg shadow-md">
 // //         <div className="relative overflow-auto max-h-[70vh]">
 // //           <Table className="min-w-full">
@@ -211,7 +211,7 @@
 // //                           <a href={`mailto:${l["Email Id"]}`} className="text-blue-600 hover:underline text-xs" onClick={(e) => e.stopPropagation()}>
 // //                             <span dangerouslySetInnerHTML={{ __html: highlight(l["Email Id"], search) }} />
 // //                           </a>
-// //                         ) : "—"}
+// //                         ) : "â€”"}
 // //                       </TableCell>
 
 // //                       {/* Company Email */}
@@ -221,7 +221,7 @@
 // //                             <a href={`mailto:${l.email}`} className="text-blue-600 hover:underline text-xs" onClick={(e) => e.stopPropagation()}>
 // //                               <span dangerouslySetInnerHTML={{ __html: highlight(l.email, search) }} />
 // //                             </a>
-// //                           ) : "—"}
+// //                           ) : "â€”"}
 // //                           {l.email && (
 // //                             <a href={`mailto:${l.email}`} onClick={(e) => e.stopPropagation()} title="Send email"
 // //                               className="p-1 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition ml-auto">
@@ -233,27 +233,27 @@
 
 // //                       {/* Phone */}
 // //                       <TableCell className="whitespace-nowrap">
-// //                         {l.landlineNo || l.mobileNo || "—"}
+// //                         {l.landlineNo || l.mobileNo || "â€”"}
 // //                       </TableCell>
 
-// //                       <TableCell>{l.city || "—"}</TableCell>
-// //                       <TableCell>{l.state || "—"}</TableCell>
-// //                       <TableCell>{l.Template || "—"}</TableCell>
-// //                       <TableCell>{l.Subject || "—"}</TableCell>
+// //                       <TableCell>{l.city || "â€”"}</TableCell>
+// //                       <TableCell>{l.state || "â€”"}</TableCell>
+// //                       <TableCell>{l.Template || "â€”"}</TableCell>
+// //                       <TableCell>{l.Subject || "â€”"}</TableCell>
 
-// //                       {/* Date — Excel serial → readable */}
+// //                       {/* Date â€” Excel serial â†’ readable */}
 // //                       <TableCell className="whitespace-nowrap text-xs">
 // //                         {excelDateToString(l.Date)}
 // //                       </TableCell>
 
 // //                       {/* IP Address */}
 // //                       <TableCell className="text-xs text-gray-500">
-// //                         {l["IP Address"] || "—"}
+// //                         {l["IP Address"] || "â€”"}
 // //                       </TableCell>
 
 // //                       {/* Web */}
 // //                       <TableCell className="text-xs text-gray-500">
-// //                         {l.Web || "—"}
+// //                         {l.Web || "â€”"}
 // //                       </TableCell>
 
 // //                       {/* Email Sent */}
@@ -262,7 +262,7 @@
 // //                           l["Email sent"] === "Yes" ? "bg-green-100 text-green-700" :
 // //                           l["Email sent"] === "No"  ? "bg-red-100 text-red-500"    :
 // //                           "bg-gray-100 text-gray-400"
-// //                         }`}>{l["Email sent"] || "—"}</span>
+// //                         }`}>{l["Email sent"] || "â€”"}</span>
 // //                       </TableCell>
 
 // //                       {/* Verified */}
@@ -271,30 +271,30 @@
 // //                           String(l["verify email"]).toLowerCase() === "ok"
 // //                             ? "bg-green-100 text-green-700"
 // //                             : "bg-gray-100 text-gray-400"
-// //                         }`}>{l["verify email"] || "—"}</span>
+// //                         }`}>{l["verify email"] || "â€”"}</span>
 // //                       </TableCell>
 
-// //                       <TableCell>{l.leadType || "—"}</TableCell>
-// //                       <TableCell>{l.leadSource || "—"}</TableCell>
+// //                       <TableCell>{l.leadType || "â€”"}</TableCell>
+// //                       <TableCell>{l.leadSource || "â€”"}</TableCell>
 
 // //                       {/* Status */}
 // //                       <TableCell>
 // //                         <span className={`px-2 py-1 text-xs rounded-md font-medium ${
 // //                           statusColors[l.leadStatus] || statusColors[l.status] || "bg-gray-100 text-gray-700"
-// //                         }`}>{l.leadStatus || l.status || "—"}</span>
+// //                         }`}>{l.leadStatus || l.status || "â€”"}</span>
 // //                       </TableCell>
 
-// //                       <TableCell>{l.RCMCPanel || "—"}</TableCell>
-// //                       <TableCell>{l.pinCode || "—"}</TableCell>
+// //                       <TableCell>{l.RCMCPanel || "â€”"}</TableCell>
+// //                       <TableCell>{l.pinCode || "â€”"}</TableCell>
 
 // //                       {/* Notes */}
 // //                       <TableCell>
 // //                         <span className="truncate max-w-[120px] block text-gray-500 text-xs" title={l.notes}>
-// //                           {l.notes || "—"}
+// //                           {l.notes || "â€”"}
 // //                         </span>
 // //                       </TableCell>
 
-// //                       {/* ── Action Menu ── */}
+// //                       {/* â”€â”€ Action Menu â”€â”€ */}
 // //                       <TableCell className="relative action-menu">
 // //                         <div className="flex justify-center">
 // //                           <button
@@ -332,11 +332,11 @@
 // //           </Table>
 // //         </div>
 
-// //         {/* ── Footer / Pagination ── */}
+// //         {/* â”€â”€ Footer / Pagination â”€â”€ */}
 // //         <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-200 p-4 bg-gray-50 gap-2">
 // //           <div className="flex items-center gap-3">
 // //             <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-// //             <span>Page {page} of {totalPages || 1} • {total} items</span>
+// //             <span>Page {page} of {totalPages || 1} â€¢ {total} items</span>
 // //             <Button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</Button>
 // //           </div>
 // //           <div className="flex items-center gap-3">
@@ -365,11 +365,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Filter, Plus, RefreshCcw, Pencil, Trash2, Eye, MoreVertical, Mail, Phone, Download,
+  Filter, RefreshCcw, Pencil, Trash2, Eye, MoreVertical, Mail, Download, Copy,
 } from "lucide-react";
 import MailFormModal from "../components/MailFormModal";
 import MailFilters from "../components/MailFilters";
-import ImportModal from "../components/ImportModal";
 import useMailStore from "../store/mailStore";
 import { successToast, errorToast } from "@/utils/customToast";
 import { bulkDeleteMails, bulkUpdateMailStatus } from "../api/mailApi";
@@ -399,6 +398,11 @@ const statusColors = {
   enquiry: "bg-yellow-100 text-yellow-700",
   reached: "bg-blue-100 text-blue-700",
   stop: "bg-red-200 text-red-800",
+  Active: "bg-green-100 text-green-700",
+  Stop: "bg-red-200 text-red-800",
+  "Enquiry - Call": "bg-amber-100 text-amber-800",
+  "Enquiry - Mail": "bg-blue-100 text-blue-700",
+  "Enquiry - WhatsApp": "bg-emerald-100 text-emerald-700",
 };
 
 // Helper for highlighting search terms
@@ -415,9 +419,9 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// ✅ Updated excelDateToString – format: 9-Feb-26
+// âœ… Updated excelDateToString â€“ format: 9-Feb-26
 function excelDateToString(serial) {
-  if (!serial || isNaN(serial)) return serial || "—";
+  if (!serial || isNaN(serial)) return serial || "â€”";
   const date = new Date((serial - 25569) * 86400 * 1000);
   const day = String(date.getDate()).padStart(2, '0');   // leading zero
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -426,8 +430,51 @@ function excelDateToString(serial) {
   return `${day}-${month}-${year}`;
 }
 
+function formatSeenStatus(emailSeen, lastOpenedAt) {
+  const normalizedSeen = String(emailSeen || "").trim().toLowerCase();
+
+  if (normalizedSeen === "yes") {
+    return {
+      label: "Yes",
+      className: "bg-emerald-100 text-emerald-700",
+      title: "Email marked as seen",
+    };
+  }
+
+  if (normalizedSeen === "no") {
+    return {
+      label: "No",
+      className: "bg-gray-100 text-gray-600",
+      title: "Email marked as not seen",
+    };
+  }
+
+  if (!lastOpenedAt) {
+    return {
+      label: "—",
+      className: "bg-gray-100 text-gray-500",
+      title: "Email seen status is not available",
+    };
+  }
+
+  const openedAt = new Date(lastOpenedAt);
+  if (Number.isNaN(openedAt.getTime())) {
+    return {
+      label: "Yes",
+      className: "bg-emerald-100 text-emerald-700",
+      title: "Mail record viewed",
+    };
+  }
+
+  return {
+    label: "Yes",
+    className: "bg-emerald-100 text-emerald-700",
+    title: `Viewed on ${openedAt.toLocaleString()}`,
+  };
+}
+
 export default function MailTable() {
-  // ── Store actions & state ───────────────────────────────────────────
+  // â”€â”€ Store actions & state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const {
     leads, total, page, limit, loading, search,
     loadLeads, setPage, setLimit, setSearch,
@@ -435,17 +482,15 @@ export default function MailTable() {
     toggleSelect, selectedIds,
   } = useMailStore();
 
-  // ── Local UI state ──────────────────────────────────────────────────
+  // â”€â”€ Local UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [showFilters, setShowFilters] = useState(false);
-  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
-  const [importModalOpen, setImportModalOpen] = useState(false);
   const [openFormModal, setOpenFormModal] = useState(false);
   const [editLead, setEditLead] = useState(null);
   const [viewMode, setViewMode] = useState(false);
   const [openActionMenu, setOpenActionMenu] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Sorting (client‑side)
+  // Sorting (clientâ€‘side)
   const [sortField, setSortField] = useState("createdAt");
   const [sortDir, setSortDir] = useState("desc");
 
@@ -468,7 +513,7 @@ export default function MailTable() {
     setLocalSelectAll(allSelected);
   }, [leads, localSelected]);
 
-  // ── Data & filters ──────────────────────────────────────────────────
+  // â”€â”€ Data & filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     loadLeads();
   }, []);
@@ -478,7 +523,7 @@ export default function MailTable() {
     loadLeads();
   }, [loadLeads]);
 
-  // ── Sorting (client‑side) ────────────────────────────────────────────
+  // â”€â”€ Sorting (clientâ€‘side) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const sortedLeads = useMemo(() => {
     const data = [...leads];
     if (!sortField) return data;
@@ -512,7 +557,7 @@ export default function MailTable() {
     }
   };
 
-  // ── Selection helpers ────────────────────────────────────────────────
+  // â”€â”€ Selection helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSelectAll = (checked) => {
     setLocalSelectAll(checked);
     if (checked) {
@@ -531,7 +576,7 @@ export default function MailTable() {
     toggleSelect(id);
   };
 
-  // ── Bulk actions ─────────────────────────────────────────────────────
+  // â”€â”€ Bulk actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const handleBulkStatusUpdate = async () => {
   if (selectedIds.length === 0) return errorToast("No mails selected");
 
@@ -551,7 +596,7 @@ const handleBulkStatusUpdate = async () => {
   if (!newStatus) return;
 
   try {
-    // Call a mail‑specific bulk endpoint (we'll create it next)
+    // Call a mailâ€‘specific bulk endpoint (we'll create it next)
     await bulkUpdateMailStatus(selectedIds, newStatus);
     successToast(`${selectedIds.length} mail(s) updated to ${newStatus}`);
     clearSelection();
@@ -581,7 +626,7 @@ const handleBulkStatusUpdate = async () => {
     }
   };
 
-  // ── Single delete ────────────────────────────────────────────────────
+  // â”€â”€ Single delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -598,7 +643,7 @@ const handleBulkStatusUpdate = async () => {
     }
   };
 
-  // ── Export CSV (using store export) ─────────────────────────────────
+  // â”€â”€ Export CSV (using store export) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleExportCSV = () => {
     if (!leads || leads.length === 0) {
       errorToast("No records to export");
@@ -608,18 +653,17 @@ const handleBulkStatusUpdate = async () => {
     successToast("CSV exported");
   };
 
-  // ── Clear all filters ───────────────────────────────────────────────
+  // â”€â”€ Clear all filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleClearFilters = () => {
     clearFilters();
     successToast("Filters cleared");
   };
 
-  // ── Close dropdowns on outside click ────────────────────────────────
+  // â”€â”€ Close dropdowns on outside click â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && dropdownRef.current.contains(e.target)) return;
       if (e.target.closest && e.target.closest(".action-menu")) return;
-      setShowCreateDropdown(false);
       setOpenActionMenu(null);
     };
     document.addEventListener("click", handler);
@@ -627,6 +671,21 @@ const handleBulkStatusUpdate = async () => {
   }, []);
 
   const totalPages = Math.ceil(total / limit);
+
+  const copyToClipboard = async (value, label) => {
+    const text = String(value || "").trim();
+    if (!text || text === "—") {
+      errorToast(`No ${label.toLowerCase()} available to copy`);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      successToast(`${label} copied`);
+    } catch (error) {
+      errorToast(`Unable to copy ${label.toLowerCase()}`);
+    }
+  };
 
   return (
     <div className="space-y-4 p-4">
@@ -650,23 +709,8 @@ const handleBulkStatusUpdate = async () => {
           </Button>
         </div>
 
-        <div className="relative">
-          <Button onClick={() => setShowCreateDropdown(!showCreateDropdown)} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-            <Plus size={16} /> Create Mail
-            <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </Button>
-          {showCreateDropdown && (
-            <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <button onClick={() => { setShowCreateDropdown(false); setEditLead(null); setViewMode(false); setOpenFormModal(true); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                Create Mail
-              </button>
-              <button onClick={() => { setShowCreateDropdown(false); setImportModalOpen(true); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                Import Mails
-              </button>
-            </div>
-          )}
+        <div className="rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700">
+          Mail table is synced automatically from Leads
         </div>
       </div>
 
@@ -699,12 +743,6 @@ const handleBulkStatusUpdate = async () => {
         setViewMode={setViewMode}
         onSaved={refresh}
       />
-      <ImportModal
-        open={importModalOpen}
-        setOpen={setImportModalOpen}
-        onImported={refresh}
-        entity="mails"
-      />
 
       {/* Table */}
       <div className="bg-white border rounded-lg shadow-md">
@@ -714,37 +752,41 @@ const handleBulkStatusUpdate = async () => {
               <TableRow>
                 <TableHead><input type="checkbox" checked={localSelectAll} onChange={(e) => handleSelectAll(e.target.checked)} /></TableHead>
                 <TableHead>Sr. No.</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Sender Email</TableHead>
-                <TableHead>Company Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>State</TableHead>
-                <TableHead>Template</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Web</TableHead>
-                <TableHead>Email Sent</TableHead>
-                <TableHead>Verified</TableHead>
-                <TableHead>Lead Type</TableHead>
-                <TableHead>Lead Source</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>RCMC Panel</TableHead>
-                <TableHead>Pin Code</TableHead>
-                <TableHead>Notes</TableHead>
+                <TableHead>Name of Client</TableHead>
+                <TableHead>Email ID</TableHead>
+                <TableHead>LEAD SOURCE</TableHead>
+                <TableHead>EMAIL VERIFIED</TableHead>
+                <TableHead>EMAIL SENT</TableHead>
+                <TableHead>Email Seen</TableHead>
+                <TableHead>Email Status</TableHead>
+                <TableHead>Enquiry Status</TableHead>
+                <TableHead>Turnup</TableHead>
+                <TableHead>CDCR NO</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={22} className="text-center py-8 text-gray-400">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={13} className="text-center py-8 text-gray-400">Loading...</TableCell></TableRow>
               ) : sortedLeads.length === 0 ? (
-                <TableRow><TableCell colSpan={22} className="text-center py-8 text-gray-500">No records found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={13} className="text-center py-8 text-gray-500">No records found</TableCell></TableRow>
               ) : (
                 sortedLeads.map((lead, idx) => {
                   const srNo = (page - 1) * limit + idx + 1;
                   const isSelected = selectedIds.includes(lead._id);
+                  const clientEmail = lead.email || "—";
+                  const senderEmail = lead.senderEmail || "—";
+                  const emailVerifiedValue =
+                    lead.emailVerifiedStatus ||
+                    lead["email verified"] ||
+                    lead["verify email"] ||
+                    (lead.emailVerified === true ? "Yes" : lead.emailVerified === false ? "No" : "") ||
+                    "—";
+                  const seenState = formatSeenStatus(lead.emailSeen, lead.lastOpenedAt);
+                  const emailStatusValue = lead.emailStatus || lead.Status || lead.status || "—";
+                  const enquiryStatusValue = lead.enquiryStatus || "—";
+                  const turnupValue = lead.turnup || "—";
+                  const cdcrNoValue = lead.cdcrNo || "—";
                   return (
                     <TableRow
                       key={lead._id}
@@ -760,57 +802,70 @@ const handleBulkStatusUpdate = async () => {
                         <input type="checkbox" checked={isSelected} onChange={() => handleToggleSelect(lead._id)} />
                       </TableCell>
                       <TableCell>{srNo}</TableCell>
-                      <TableCell><div dangerouslySetInnerHTML={{ __html: highlight(lead.name || "", search) }} /></TableCell>
-                      <TableCell>{lead["Email Id"] || "—"}</TableCell>
-                      <TableCell>{lead.email || "—"}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span>{lead.mobileNo || lead.landlineNo || "—"}</span>
-                          <div className="ml-auto flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                            {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="p-1 rounded hover:bg-gray-100"><Mail size={16} /></a>}
-                            {(lead.mobileNo || lead.landlineNo) && <a href={`tel:${lead.mobileNo || lead.landlineNo}`} onClick={(e) => e.stopPropagation()} className="p-1 rounded hover:bg-gray-100"><Phone size={16} /></a>}
-                          </div>
+                          <div
+                            className="min-w-0 flex-1"
+                            dangerouslySetInnerHTML={{ __html: highlight(lead.name || "", search) }}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(lead.name, "Client Name");
+                            }}
+                            className="rounded p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                            title="Copy client name"
+                          >
+                            <Copy size={15} />
+                          </button>
                         </div>
                       </TableCell>
-                      <TableCell>{lead.city || "—"}</TableCell>
-                      <TableCell>{lead.state || "—"}</TableCell>
-                      <TableCell>{lead.Template || "—"}</TableCell>
-                      <TableCell>{lead.Subject || "—"}</TableCell>
-                      <TableCell  className="whitespace-nowrap">
-                        {lead.Date ? (typeof lead.Date === "number" ? excelDateToString(lead.Date) : lead.Date) :
-                         lead.emailDate ? lead.emailDate :
-                         lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
-                      </TableCell>
-                      <TableCell>{lead["IP Address"] || lead.ipAddress || "—"}</TableCell>
-                      <TableCell>{lead.Web || lead.webTabAndType || "—"}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          (lead["Email sent"] || lead.emailSentType) === "Yes" ? "bg-green-100 text-green-700" :
-                          (lead["Email sent"] || lead.emailSentType) === "No" ? "bg-red-100 text-red-500" : "bg-gray-100 text-gray-500"
-                        }`}>
-                          {lead["Email sent"] || lead.emailSentType || "—"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="min-w-0 flex-1 break-all">{clientEmail}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(lead.email, "Email ID");
+                            }}
+                            className="rounded p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+                            title="Copy email ID"
+                          >
+                            <Copy size={15} />
+                          </button>
+                          {lead.email && <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="ml-auto p-1 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition"><Mail size={16} /></a>}
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          (lead["verify email"] || lead.emailVerified) === "ok" ? "bg-green-100 text-green-700" :
-                          (lead["verify email"] || lead.emailVerified) === "Yes" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                        }`}>
-                          {lead["verify email"] || lead.emailVerified || "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell>{lead.leadType || "—"}</TableCell>
                       <TableCell>{lead.leadSource || "—"}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 text-xs rounded-md font-medium ${
-                          statusColors[lead.leadStatus] || statusColors[lead.status] || "bg-gray-100 text-gray-700"
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          emailVerifiedValue === "Yes" || String(emailVerifiedValue).toLowerCase() === "ok"
+                            ? "bg-green-100 text-green-700"
+                            : emailVerifiedValue === "No"
+                              ? "bg-red-100 text-red-500"
+                              : "bg-gray-100 text-gray-500"
                         }`}>
-                          {lead.leadStatus || lead.status || "—"}
+                          {emailVerifiedValue}
                         </span>
                       </TableCell>
-                      <TableCell>{lead.RCMCPanel || "—"}</TableCell>
-                      <TableCell>{lead.pinCode || "—"}</TableCell>
-                      <TableCell className="max-w-32 truncate" title={lead.notes}>{lead.notes || "—"}</TableCell>
+                      <TableCell>{senderEmail}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${seenState.className}`} title={seenState.title}>
+                          {seenState.label}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 text-xs rounded-md font-medium ${
+                          statusColors[emailStatusValue] || "bg-gray-100 text-gray-700"
+                        }`}>
+                          {emailStatusValue}
+                        </span>
+                      </TableCell>
+                      <TableCell>{enquiryStatusValue}</TableCell>
+                      <TableCell>{turnupValue}</TableCell>
+                      <TableCell>{cdcrNoValue}</TableCell>
                       <TableCell className="relative action-menu">
                         <div className="flex justify-center">
                           <button onClick={(e) => { e.stopPropagation(); setOpenActionMenu((cur) => cur === lead._id ? null : lead._id); }} className="p-1 rounded hover:bg-gray-200">
@@ -843,7 +898,7 @@ const handleBulkStatusUpdate = async () => {
         <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-200 p-4 bg-gray-50 gap-2">
           <div className="flex items-center gap-3">
             <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-            <span>Page {page} of {totalPages || 1} • {total} items</span>
+            <span>Page {page} of {totalPages || 1} â€¢ {total} items</span>
             <Button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</Button>
           </div>
           <div className="flex items-center gap-3">
@@ -861,3 +916,5 @@ const handleBulkStatusUpdate = async () => {
     </div>
   );
 }
+
+

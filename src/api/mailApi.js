@@ -13,41 +13,33 @@ export const fetchMailLeads = async ({
   page = 1,
   limit = 10,
   search = "",
-  sendEmailId = "",
-  templateType = "",
-  templateSubject = "",
-  emailDate = "",
-  ipAddress = "",
-  webTabAndType = "",
+  leadSource = "",
   emailVerified = "",
-  emailSentType = "",
-  status = "",
-  city = "",
-  state = "",
-  priority = "",
+  emailSent = "",
+  emailSeen = "",
+  emailStatus = "",
+  enquiryStatus = "",
+  turnup = "",
+  cdcrNo = "",
   includeFilters = false,
 } = {}) => {
-  const normalizedSendEmailId = Array.isArray(sendEmailId)
-    ? sendEmailId.join(",")
-    : sendEmailId || undefined;
+  const normalizedEmailSent = Array.isArray(emailSent)
+    ? emailSent.join(",")
+    : emailSent || undefined;
 
   const { data } = await api.get("/api/mail", {
     params: {
       page,
       limit,
       search: search || undefined,
-      sendEmailId: normalizedSendEmailId,
-      templateType: templateType || undefined,
-      templateSubject: templateSubject || undefined,
-      emailDate: emailDate || undefined,
-      ipAddress: ipAddress || undefined,
-      webTabAndType: webTabAndType || undefined,
+      leadSource: leadSource || undefined,
       emailVerified: emailVerified || undefined,
-      emailSentType: emailSentType || undefined,
-      status: status || undefined,
-      city: city || undefined,
-      state: state || undefined,
-      priority: priority || undefined,
+      emailSent: normalizedEmailSent,
+      emailSeen: emailSeen || undefined,
+      emailStatus: emailStatus || undefined,
+      enquiryStatus: enquiryStatus || undefined,
+      turnup: turnup || undefined,
+      cdcrNo: cdcrNo || undefined,
       includeFilters: includeFilters || undefined,
     },
   });
@@ -88,6 +80,7 @@ export const bulkUpdateMailStatus = async (ids = [], status = "") => {
 export const fetchFilterOptions = async () => {
   const response = await fetchMailLeads({ page: 1, limit: 1, includeFilters: true });
   return response.filterOptions || {
+    leadSource: [],
     sendEmailId: [],
     templateType: [],
     templateSubject: [],
@@ -95,10 +88,13 @@ export const fetchFilterOptions = async () => {
     ipAddress: [],
     webTabAndType: [],
     emailVerified: [],
-    emailSentType: [],
+    emailSent: [],
+    emailSeen: [],
+    emailStatus: [],
+    enquiryStatus: [],
+    turnup: [],
+    cdcrNo: [],
     status: [],
-    city: [],
-    state: [],
   };
 };
 

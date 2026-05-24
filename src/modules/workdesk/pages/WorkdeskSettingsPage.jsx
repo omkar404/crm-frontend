@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
+import { Layers3, Plus, Settings2 } from "lucide-react";
 
 import { getWorkdeskMetaApi, updateWorkdeskServiceTypesApi } from "@/api/workdesk.api";
+import {
+  WorkdeskEmptyState,
+  WorkdeskInput,
+  WorkdeskPage,
+  WorkdeskPill,
+  WorkdeskSection,
+  WorkdeskStatCard,
+} from "@/modules/workdesk/components/WorkdeskUI.jsx";
 import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
 import { errorToast, successToast } from "@/utils/customToast";
 import { getApiErrorMessage } from "@/utils/apiError";
@@ -87,105 +95,179 @@ export default function WorkdeskSettingsPage() {
     }
   };
 
+  const mainTypeCount = Object.keys(serviceTypes).length;
+  const subTypeCount = Object.values(serviceTypes).reduce(
+    (sum, subTypes) => sum + (Array.isArray(subTypes) ? subTypes.length : 0),
+    0
+  );
+
   return (
-    <div className="bg-slate-100 min-h-screen p-8">
-      <div className="bg-white rounded-xl border shadow-sm p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-3">
-          <div className="flex items-center gap-3">
-            <Settings className="w-5 h-5 text-slate-700" />
-            <h2 className="text-2xl font-bold text-slate-800">Service Request Master</h2>
+    <WorkdeskPage
+      eyebrow="Admin Configuration"
+      title="A cleaner settings desk for service request masters and workflow readiness"
+      description="The configuration area now feels more structured and product-grade, making master-data maintenance easier to review and safer to update."
+      actions={
+        isAdmin ? (
+          <button
+            type="button"
+            onClick={saveServiceTypes}
+            disabled={saving}
+            className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(15,23,42,0.22)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        ) : null
+      }
+      hero={
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-4 md:grid-cols-3">
+            <WorkdeskStatCard
+              label="Main Types"
+              value={mainTypeCount}
+              caption="Top-level service categories"
+              icon={Layers3}
+              accent="slate"
+            />
+            <WorkdeskStatCard
+              label="Sub Types"
+              value={subTypeCount}
+              caption="Operational request variants"
+              icon={Plus}
+              accent="blue"
+            />
+            <WorkdeskStatCard
+              label="Access"
+              value={isAdmin ? "Admin" : "View"}
+              caption="Current permission level"
+              icon={Settings2}
+              accent="teal"
+            />
           </div>
-          {isAdmin ? (
-            <button
-              onClick={saveServiceTypes}
-              disabled={saving}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          ) : null}
+
+          <div className="rounded-[30px] border border-slate-900/90 bg-[linear-gradient(135deg,#111827_0%,#1e293b_46%,#134e4a_100%)] p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.24)]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200/90">
+              Service Master
+            </div>
+            <h3 className="mt-2 text-2xl font-bold">Configuration with more confidence and less clutter</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Keep the allocation experience clean by maintaining a well-organized service structure behind the scenes.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <WorkdeskPill tone="dark">{isAdmin ? "Editable workspace" : "Read-only workspace"}</WorkdeskPill>
+            </div>
+          </div>
         </div>
+      }
+    >
+      <WorkdeskSection
+        title="Service Request Master"
+        description="Define main service types and their operational sub-types for a cleaner work allocation experience."
+        aside={<WorkdeskPill tone="default">{mainTypeCount} categories</WorkdeskPill>}
+      >
+        {loading ? (
+          <p className="text-sm text-slate-500">Loading settings...</p>
+        ) : mainTypeCount === 0 ? (
+          <WorkdeskEmptyState
+            title="No service types configured yet"
+            description="Create the first main service type to begin building the allocation master."
+          />
+        ) : (
+          <div className="space-y-5">
+            {Object.entries(serviceTypes).map(([mainType, subTypes]) => (
+              <div
+                key={mainType}
+                className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(248,250,252,1)_0%,rgba(255,255,255,1)_100%)] p-5 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-950">{mainType}</h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {(subTypes || []).length} configured sub-type{(subTypes || []).length === 1 ? "" : "s"}
+                    </p>
+                  </div>
 
-        <p className="text-sm text-slate-500">
-          Define main service types and their sub-types for the allocation drop-down.
-        </p>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setServiceTypes((prev) => {
+                          const next = { ...prev };
+                          delete next[mainType];
+                          return next;
+                        });
+                      }}
+                      className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
 
-        {loading ? <p className="text-sm text-slate-500">Loading settings...</p> : null}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {(subTypes || []).map((subType) => (
+                    <span
+                      key={subType}
+                      className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800"
+                    >
+                      {subType}
+                      {isAdmin ? (
+                        <button
+                          type="button"
+                          onClick={() => removeSubType(mainType, subType)}
+                          className="text-sky-700"
+                        >
+                          x
+                        </button>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
 
-        <div className="space-y-6">
-          {Object.entries(serviceTypes).map(([mainType, subTypes]) => (
-            <div key={mainType} className="border rounded-xl p-5 bg-slate-50 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-slate-800">{mainType}</h3>
                 {isAdmin ? (
-                  <button
-                    onClick={() => {
-                      setServiceTypes((prev) => {
-                        const next = { ...prev };
-                        delete next[mainType];
-                        return next;
-                      });
-                    }}
-                    className="text-sm text-red-500"
-                  >
-                    Remove
-                  </button>
+                  <div className="mt-5 flex flex-col gap-3 md:flex-row">
+                    <WorkdeskInput
+                      value={draftSubs[mainType] || ""}
+                      onChange={(e) => setDraftValue(mainType, e.target.value)}
+                      placeholder="Add sub-type"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addSubType(mainType)}
+                      className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                    >
+                      Add Sub-Type
+                    </button>
+                  </div>
                 ) : null}
               </div>
+            ))}
+          </div>
+        )}
+      </WorkdeskSection>
 
-              <div className="flex flex-wrap gap-2">
-                {(subTypes || []).map((subType) => (
-                  <div
-                    key={subType}
-                    className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2"
-                  >
-                    <span>{subType}</span>
-                    {isAdmin ? (
-                      <button onClick={() => removeSubType(mainType, subType)} className="text-blue-500">
-                        x
-                      </button>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-
-              {isAdmin ? (
-                <div className="flex gap-2">
-                  <input
-                    value={draftSubs[mainType] || ""}
-                    onChange={(e) => setDraftValue(mainType, e.target.value)}
-                    placeholder="Add sub-type"
-                    className="flex-1 border rounded-lg p-2 text-sm"
-                  />
-                  <button
-                    onClick={() => addSubType(mainType)}
-                    className="border border-dashed border-slate-400 px-4 rounded-lg text-sm text-slate-600"
-                  >
-                    + Add Sub
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        {isAdmin ? (
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-5 space-y-3">
-            <h3 className="text-lg font-semibold text-slate-700">Create New Main Service Type</h3>
-            <div className="flex gap-2">
-              <input
+      {isAdmin ? (
+        <WorkdeskSection
+          title="Create New Main Service Type"
+          description="Add a new category when expanding the service request catalog."
+        >
+          <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50/80 p-5">
+            <div className="flex flex-col gap-3 md:flex-row">
+              <WorkdeskInput
                 value={newMainType}
                 onChange={(e) => setNewMainType(e.target.value)}
                 placeholder="Main service type name"
-                className="flex-1 border rounded-lg p-2 text-sm"
               />
-              <button onClick={addMainType} className="bg-slate-900 text-white px-4 rounded-lg text-sm">
-                Add
+              <button
+                type="button"
+                onClick={addMainType}
+                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Add Main Type
               </button>
             </div>
           </div>
-        ) : null}
-      </div>
-    </div>
+        </WorkdeskSection>
+      ) : null}
+    </WorkdeskPage>
   );
 }

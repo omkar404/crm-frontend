@@ -45,6 +45,18 @@ export default function AddChaModal({ onClose, onSuccess }) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           <div>
+            <label className="text-xs font-bold text-gray-600">CDCR No</label>
+            <input
+              readOnly
+              className="w-full border rounded p-2 mt-1 text-sm bg-slate-50 text-slate-600"
+              value="CDCR-..."
+            />
+            <p className="mt-1 text-xs text-sky-700">
+              A CHA base CDCR number will be auto-generated on save, for example `CDCR-507`.
+            </p>
+          </div>
+
+          <div>
             <label className="text-xs font-bold text-gray-600">CHA Company Name</label>
             <input
               required

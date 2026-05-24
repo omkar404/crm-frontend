@@ -5,7 +5,10 @@ import workdeskAxios, {
 export const workdeskLoginApi = async (payload) => {
   const res = await workdeskAxios.post("/auth/login", payload);
   setWorkdeskAccessToken(res.data.accessToken);
-  return res.data.user;
+  return {
+    user: res.data.user,
+    accessToken: res.data.accessToken,
+  };
 };
 
 export const workdeskMeApi = async () => {
@@ -18,7 +21,7 @@ export const createClient = (payload) => {
 };
 
 export const getClients = () => {
-  return workdeskAxios.get("/clients");
+  return workdeskAxios.get("/clients?limit=1000");
 };
 
 export const workdeskRefreshTokenApi = async () => {

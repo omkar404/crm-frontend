@@ -1,182 +1,71 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import useMailStore from "../store/mailStore";
 
-function MultiSelectEmailFilter({ label, options, selectedValues, onChange }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
+const EMAIL_SENT_FILTER_OPTIONS = [
+  "jaggdish@eximinq-connect.in",
+  "jaggdish@eximinq-audit.in",
+  "jaggdish@eximinq-group.in",
+  "jaggdish@eximinq-info.in",
+  "jaggdish.a@eximinq-advisory.in",
+  "jaggdish.acharya@eximinq-global.in",
+  "j.acharya@eximinq-desk.in",
+  "jaggdish.a@eximinq-exim.in",
+  "jaggdish.acharya@eximinq-services.in",
+  "Blank",
+];
 
-  const filteredOptions = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) {
-      return options;
-    }
+const EMAIL_SENT_DEPENDENCIES = {
+  "jaggdish@eximinq-connect.in": { wifi: "raksha", browser: "chrome" },
+  "jaggdish@eximinq-audit.in": { wifi: "shruti", browser: "edge" },
+  "jaggdish@eximinq-group.in": { wifi: "menka", browser: "mozila" },
+  "jaggdish@eximinq-info.in": { wifi: "raksha", browser: "chrome" },
+  "jaggdish.a@eximinq-advisory.in": { wifi: "shruti", browser: "edge" },
+  "jaggdish.acharya@eximinq-global.in": { wifi: "menka", browser: "mozila" },
+  "j.acharya@eximinq-desk.in": { wifi: "raksha", browser: "chrome" },
+  "jaggdish.a@eximinq-exim.in": { wifi: "shruti", browser: "edge" },
+  "jaggdish.acharya@eximinq-services.in": { wifi: "menka", browser: "mozila" },
+};
 
-    return options.filter((option) => option.toLowerCase().includes(query));
-  }, [options, search]);
-
-  const allVisibleSelected =
-    filteredOptions.length > 0 &&
-    filteredOptions.every((option) => selectedValues.includes(option));
-
-  const toggleValue = (value) => {
-    if (selectedValues.includes(value)) {
-      onChange(selectedValues.filter((item) => item !== value));
-      return;
-    }
-
-    onChange([...selectedValues, value]);
-  };
-
-  const toggleAllVisible = () => {
-    if (allVisibleSelected) {
-      onChange(selectedValues.filter((item) => !filteredOptions.includes(item)));
-      return;
-    }
-
-    onChange([...new Set([...selectedValues, ...filteredOptions])]);
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between rounded border bg-white px-3 py-2 text-left"
-      >
-        <span className={selectedValues.length ? "text-gray-900" : "text-gray-500"}>
-          {selectedValues.length ? `${label} (${selectedValues.length})` : label}
-        </span>
-        <span className="text-xs text-gray-500">{open ? "▲" : "▼"}</span>
-      </button>
-
-      {open && (
-        <div className="absolute z-50 mt-2 w-full rounded border bg-white p-3 shadow-lg">
-          <div className="mb-2 border-b pb-2 text-sm font-medium text-gray-700">Text Filters</div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            className="mb-3 w-full rounded border px-3 py-2 text-sm"
-          />
-          <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={allVisibleSelected}
-              onChange={toggleAllVisible}
-            />
-            <span>(Select All)</span>
-          </label>
-          <div className="max-h-40 overflow-y-auto space-y-2">
-            {filteredOptions.map((option) => (
-              <label key={option} className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(option)}
-                  onChange={() => toggleValue(option)}
-                />
-                <span>{option}</span>
-              </label>
-            ))}
-            {filteredOptions.length === 0 && (
-              <div className="text-sm text-gray-500">No email IDs found.</div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+const ENQUIRY_STATUS_OPTIONS = ["Pending", "Reverted", "Close", "No Revert"];
+const TURNUP_OPTIONS = ["Yes", "No"];
 
 export default function MailFilters() {
   const {
-    sendEmailId,
-    setSendEmailId,
+    leadSource,
+    setLeadSource,
     filterOptions,
-    templateType,
-    setTemplateType,
-    templateSubject,
-    setTemplateSubject,
-    emailDate,
-    setEmailDate,
-    ipAddress,
-    setIpAddress,
-    webTabAndType,
-    setWebTabAndType,
     emailVerified,
     setEmailVerified,
-    emailSentType,
-    setEmailSentType,
-    statusFilter,
-    setStatusFilter,
+    emailSent,
+    setEmailSent,
+    emailSeen,
+    setEmailSeen,
+    emailStatus,
+    setEmailStatus,
+    enquiryStatus,
+    setEnquiryStatus,
+    turnup,
+    setTurnup,
+    cdcrNo,
+    setCdcrNo,
     clearFilters,
   } = useMailStore();
 
   const selectClassName = "border rounded px-3 py-2 bg-white";
+  const dependentFieldClassName =
+    "border rounded px-3 py-2 bg-slate-100 text-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100";
+  const selectedEmailDetails = EMAIL_SENT_DEPENDENCIES[emailSent] || { wifi: "", browser: "" };
 
   return (
     <div className="rounded-lg bg-gray-100 p-4 shadow-md">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <MultiSelectEmailFilter
-          label="Send Email ID"
-          options={filterOptions.sendEmailId || []}
-          selectedValues={sendEmailId}
-          onChange={setSendEmailId}
-        />
-
         <select
-          value={templateType}
-          onChange={(e) => setTemplateType(e.target.value)}
+          value={leadSource}
+          onChange={(e) => setLeadSource(e.target.value)}
           className={selectClassName}
         >
-          <option value="">Template Type</option>
-          {filterOptions.templateType?.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={templateSubject}
-          onChange={(e) => setTemplateSubject(e.target.value)}
-          className={selectClassName}
-        >
-          <option value="">Template Subject</option>
-          {filterOptions.templateSubject?.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          value={emailDate}
-          onChange={(e) => setEmailDate(e.target.value)}
-          className={selectClassName}
-          placeholder="Email Date"
-        />
-
-        <select
-          value={ipAddress}
-          onChange={(e) => setIpAddress(e.target.value)}
-          className={selectClassName}
-        >
-          <option value="">IP Address</option>
-          {filterOptions.ipAddress?.map((value) => (
-            <option key={value} value={value}>
-              {value}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={webTabAndType}
-          onChange={(e) => setWebTabAndType(e.target.value)}
-          className={selectClassName}
-        >
-          <option value="">Web</option>
-          {filterOptions.webTabAndType?.map((value) => (
+          <option value="">Lead Source</option>
+          {filterOptions.leadSource?.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
@@ -197,12 +86,43 @@ export default function MailFilters() {
         </select>
 
         <select
-          value={emailSentType}
-          onChange={(e) => setEmailSentType(e.target.value)}
+          value={emailSent}
+          onChange={(e) => setEmailSent(e.target.value)}
           className={selectClassName}
         >
           <option value="">Email Sent</option>
-          {filterOptions.emailSentType?.map((value) => (
+          {EMAIL_SENT_FILTER_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          value={selectedEmailDetails.wifi}
+          placeholder="WiFi"
+          disabled
+          readOnly
+          className={dependentFieldClassName}
+        />
+
+        <input
+          type="text"
+          value={selectedEmailDetails.browser}
+          placeholder="Browser"
+          disabled
+          readOnly
+          className={dependentFieldClassName}
+        />
+
+        <select
+          value={emailSeen}
+          onChange={(e) => setEmailSeen(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Email Seen</option>
+          {filterOptions.emailSeen?.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
@@ -210,12 +130,51 @@ export default function MailFilters() {
         </select>
 
         <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          value={emailStatus}
+          onChange={(e) => setEmailStatus(e.target.value)}
           className={selectClassName}
         >
-          <option value="">Status</option>
-          {filterOptions.status?.map((value) => (
+          <option value="">Email Status</option>
+          {filterOptions.emailStatus?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={enquiryStatus}
+          onChange={(e) => setEnquiryStatus(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Enquiry Status</option>
+          {ENQUIRY_STATUS_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={turnup}
+          onChange={(e) => setTurnup(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">Turnup</option>
+          {TURNUP_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={cdcrNo}
+          onChange={(e) => setCdcrNo(e.target.value)}
+          className={selectClassName}
+        >
+          <option value="">CDCR NO</option>
+          {filterOptions.cdcrNo?.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
