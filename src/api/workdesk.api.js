@@ -25,6 +25,11 @@ export const createWorkdeskTaskApi = async (payload) => {
   return data;
 };
 
+export const updateWorkdeskTaskApi = async (taskId, payload) => {
+  const { data } = await workdeskAxios.put(`/tasks/${taskId}`, payload);
+  return data;
+};
+
 export const updateWorkdeskTaskStatusApi = async (taskId, status) => {
   const { data } = await workdeskAxios.put(`/tasks/${taskId}/status`, { status });
   return data;

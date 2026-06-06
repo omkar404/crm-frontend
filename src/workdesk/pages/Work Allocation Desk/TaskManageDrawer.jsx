@@ -6,6 +6,7 @@ import {
   addWorkdeskTaskCommentApi,
   payWorkdeskInvoiceApi,
   raiseWorkdeskInvoiceApi,
+  updateWorkdeskTaskApi,
   updateWorkdeskTaskJobWorkApi,
   updateWorkdeskTaskStatusApi,
 } from "@/api/workdesk.api";
@@ -82,7 +83,14 @@ function WorkLevelBadge({ workLevel }) {
   );
 }
 
-export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflowStatuses = [] }) {
+export default function TaskManageDrawer({
+  task,
+  onClose,
+  onTaskUpdated,
+  workflowStatuses = [],
+  serviceTypes = {},
+  staff = [],
+}) {
   const { user } = useWorkdeskAuthStore();
   const isAdmin = user?.role === "ADMIN";
   const [selectedStatus, setSelectedStatus] = useState(task.status);
@@ -103,6 +111,20 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
     receivedAmount: "",
     tdsAmount: "0",
   });
+  const [editForm, setEditForm] = useState({
+    serviceType: task.serviceType || "",
+    subType: task.subType || "",
+    assignedToUserId: task.assignedToUserId || "",
+    emailSender: task.emailSender || "",
+    emailDate: "",
+    details: task.details || "",
+    quotation: task.quotation || "",
+    officialFee: "",
+    serviceCharges: "",
+    workLevel: task.workLevel || "",
+    slaDays: task.slaDays || 5,
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const history = useMemo(() => task.history || [], [task.history]);
   const comments = useMemo(() => task.comments || [], [task.comments]);
@@ -127,8 +149,11 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
 
   const showInvoiceSection =
     isAdmin && (selectedStatus === "Invoice Raised" || selectedStatus === "Invoice Paid" || Boolean(invoice));
-  const showInvoiceEditor = isAdmin && selectedStatus === "Invoice Raised";
-  const showPaymentEditor = isAdmin && selectedStatus === "Invoice Paid" && Boolean(invoice);
+  const invoiceLocked = ["Invoice Raised", "Invoice Paid"].includes(task.status) || Boolean(invoice);
+  const showInvoiceEditor = isAdmin && selectedStatus === "Invoice Raised" && !invoiceLocked;
+  const paymentLocked = task.status === "Invoice Paid" || invoice?.status === "Invoice Paid";
+  const showPaymentEditor =
+    isAdmin && selectedStatus === "Invoice Paid" && Boolean(invoice) && !paymentLocked;
   const isNonAdminInvoiceStatus = !isAdmin && ADMIN_ONLY_WORKFLOW_STATUSES.includes(task.status);
   const currentJobWorkStatus = task.jobWorkStatus || "Active";
 
@@ -167,6 +192,55 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
       receivedAmount: toInputNumber(calculatedReceivedAmount, "0"),
     }));
   }, [calculatedReceivedAmount]);
+
+  useEffect(() => {
+    setEditForm({
+      serviceType: task.serviceType || "",
+      subType: task.subType || "",
+      assignedToUserId: task.assignedToUserId || "",
+      emailSender: task.emailSender || "",
+      emailDate: task.emailDate ? new Date(task.emailDate).toISOString().slice(0, 16) : "",
+      details: task.details || "",
+      quotation: task.quotation || "",
+      officialFee: toInputNumber(task.officialFee),
+      serviceCharges: toInputNumber(task.serviceCharges),
+      workLevel: task.workLevel || "",
+      slaDays: task.slaDays || 5,
+    });
+  }, [task]);
+
+  const saveAllocationEdits = async () => {
+    if (!isAdmin) return;
+
+    try {
+      setEditSubmitting(true);
+      const payload = {
+        serviceType: editForm.serviceType,
+        subType: editForm.subType,
+        assignedToUserId: editForm.assignedToUserId,
+        emailSender: editForm.emailSender,
+        emailDate: editForm.emailDate,
+        details: editForm.details,
+        workLevel: editForm.workLevel,
+        slaDays: Number(editForm.slaDays) > 0 ? Number(editForm.slaDays) : 5,
+      };
+
+      if (!invoiceLocked) {
+        payload.quotation = editForm.quotation;
+        payload.officialFee = editForm.officialFee === "" ? null : parseAmount(editForm.officialFee);
+        payload.serviceCharges =
+          editForm.serviceCharges === "" ? null : parseAmount(editForm.serviceCharges);
+      }
+
+      const updatedTask = await updateWorkdeskTaskApi(task._id, payload);
+      onTaskUpdated?.(updatedTask);
+      successToast("Allocated work updated successfully.");
+    } catch (error) {
+      errorToast(getApiErrorMessage(error, "Unable to update allocated work."));
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   const sendStatusUpdate = async () => {
     if (!selectedStatus || selectedStatus === task.status) {
@@ -392,6 +466,8 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
                 disabled={
                   submitting ||
                   isNonAdminInvoiceStatus ||
+                  (selectedStatus === "Invoice Raised" && invoiceLocked) ||
+                  (selectedStatus === "Invoice Paid" && paymentLocked) ||
                   (!showInvoiceEditor && !showPaymentEditor && selectedStatus === task.status) ||
                   (showPaymentEditor && !invoice?._id)
                 }
@@ -404,11 +480,13 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
                   : selectedStatus === "Strike Off"
                   ? "Strike Off"
                   : selectedStatus === "Invoice Raised"
-                  ? invoice?._id
-                    ? "Update Invoice"
+                  ? invoiceLocked
+                    ? "Invoice Locked"
                     : "Create Invoice"
                   : selectedStatus === "Invoice Paid"
-                  ? "Save Payment"
+                  ? paymentLocked
+                    ? "Payment Locked"
+                    : "Save Payment"
                   : "Send"}
               </button>
             </div>
@@ -429,7 +507,237 @@ export default function TaskManageDrawer({ task, onClose, onTaskUpdated, workflo
                 Admin completed this task. The final invoice status is shown here for staff tracking.
               </p>
             ) : null}
+            {isAdmin && selectedStatus === "Invoice Raised" && invoiceLocked ? (
+              <p className="mt-3 text-xs font-medium text-sky-800">
+                Invoice details are locked once the invoice has been raised.
+              </p>
+            ) : null}
+            {isAdmin && selectedStatus === "Invoice Paid" && paymentLocked ? (
+              <p className="mt-3 text-xs font-medium text-sky-800">
+                Payment details are locked once the invoice has been marked paid.
+              </p>
+            ) : null}
           </div>
+
+          {isAdmin ? (
+            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900">
+                <FileText className="h-5 w-5 text-slate-600" />
+                Edit Allocated Work
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Service
+                  </label>
+                  <select
+                    value={editForm.serviceType}
+                    onChange={(e) =>
+                      setEditForm((current) => ({
+                        ...current,
+                        serviceType: e.target.value,
+                        subType: "",
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  >
+                    <option value="">Select service</option>
+                    {Object.keys(serviceTypes).map((service) => (
+                      <option key={service} value={service}>
+                        {service}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Sub Type
+                  </label>
+                  <select
+                    value={editForm.subType}
+                    disabled={!editForm.serviceType}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, subType: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 disabled:bg-slate-50"
+                  >
+                    <option value="">Select sub type</option>
+                    {(serviceTypes[editForm.serviceType] || []).map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Assigned Staff
+                  </label>
+                  <select
+                    value={editForm.assignedToUserId}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, assignedToUserId: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  >
+                    <option value="">Assign staff</option>
+                    {staff.map((member) => (
+                      <option key={member._id} value={member._id}>
+                        {member.name} ({member.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Work Level
+                  </label>
+                  <select
+                    value={editForm.workLevel}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, workLevel: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  >
+                    <option value="">Select work level</option>
+                    <option value="High Risk">High Risk</option>
+                    <option value="Pendency">Pendency</option>
+                    <option value="Important">Important</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Email / WhatsApp
+                  </label>
+                  <input
+                    value={editForm.emailSender}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, emailSender: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Received Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.emailDate}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, emailDate: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    SLA Days
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editForm.slaDays}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, slaDays: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Quotation
+                  </label>
+                  <select
+                    value={editForm.quotation}
+                    disabled={invoiceLocked}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, quotation: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 disabled:bg-slate-50"
+                  >
+                    <option value="">Select quotation type</option>
+                    <option value="Via WhatsApp">Via WhatsApp</option>
+                    <option value="Email">Email</option>
+                    <option value="Agreed">Agreed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Official Fee
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.officialFee}
+                    disabled={invoiceLocked}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, officialFee: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 disabled:bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Service Charges
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editForm.serviceCharges}
+                    disabled={invoiceLocked}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, serviceCharges: e.target.value }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100 disabled:bg-slate-50"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Special Instructions
+                  </label>
+                  <textarea
+                    value={editForm.details}
+                    onChange={(e) =>
+                      setEditForm((current) => ({ ...current, details: e.target.value }))
+                    }
+                    className="min-h-[96px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  />
+                </div>
+              </div>
+
+              {invoiceLocked ? (
+                <p className="mt-3 text-xs font-medium text-slate-500">
+                  Quotation, official fee, and service charges are locked because invoice details
+                  have already been raised.
+                </p>
+              ) : null}
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={saveAllocationEdits}
+                  disabled={editSubmitting}
+                  className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {editSubmitting ? "Saving..." : "Save Allocation Edits"}
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/70 p-5">
             <label className="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">

@@ -12,6 +12,7 @@ import TaskManageDrawer from "./TaskManageDrawer";
 
 const WORK_LEVEL_ORDER = ["High Risk", "Pendency", "Important"];
 const COMPLETED_TASK_STATUSES = ["Pending for Invoicing", "Invoice Raised", "Invoice Paid"];
+const HIDDEN_ACTIVE_WORKFLOW_STATUSES = ["Invoice Paid"];
 const STRIKE_OFF_STATUS = "Strike Off";
 const DEFAULT_WORKFLOW_STATUSES = [
   "Request Initiated",
@@ -106,6 +107,15 @@ function WorkLevelBadge({ workLevel }) {
     >
       {workLevel}
     </span>
+  );
+}
+
+function isActiveWorkflowTask(task) {
+  return (
+    task.status !== STRIKE_OFF_STATUS &&
+    task.jobWorkStatus !== STRIKE_OFF_STATUS &&
+    task.jobWorkStatus !== "Completed" &&
+    !HIDDEN_ACTIVE_WORKFLOW_STATUSES.includes(task.status)
   );
 }
 
@@ -204,7 +214,7 @@ function WorkflowTaskGridModal({ title, tasks, onClose, onManage }) {
 
 export default function ActiveWorkflowDesk() {
   const [tasks, setTasks] = useState([]);
-  const [meta, setMeta] = useState({ workflowStatuses: [] });
+  const [meta, setMeta] = useState({ workflowStatuses: [], serviceTypes: {}, staff: [] });
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState(null);
   const [workflowModal, setWorkflowModal] = useState(null);
@@ -214,7 +224,7 @@ export default function ActiveWorkflowDesk() {
     try {
       const [taskData, metaData] = await Promise.all([getWorkdeskTasksApi(), getWorkdeskMetaApi()]);
       setTasks(Array.isArray(taskData) ? taskData : []);
-      setMeta(metaData || { workflowStatuses: [] });
+      setMeta(metaData || { workflowStatuses: [], serviceTypes: {}, staff: [] });
     } finally {
       setLoading(false);
     }
@@ -230,7 +240,7 @@ export default function ActiveWorkflowDesk() {
   );
 
   const activeTasks = useMemo(
-    () => tasks.filter((task) => task.status !== STRIKE_OFF_STATUS),
+    () => tasks.filter(isActiveWorkflowTask),
     [tasks]
   );
 
@@ -390,6 +400,8 @@ export default function ActiveWorkflowDesk() {
         <TaskManageDrawer
           task={activeTask}
           workflowStatuses={visibleWorkflowStatuses}
+          serviceTypes={meta.serviceTypes}
+          staff={meta.staff}
           onClose={() => setActiveTask(null)}
           onTaskUpdated={(updatedTask) => {
             setActiveTask(updatedTask);
@@ -399,6 +411,8 @@ export default function ActiveWorkflowDesk() {
                   ? {
                       ...task,
                       status: updatedTask.status,
+                      serviceType: updatedTask.serviceType,
+                      subType: updatedTask.subType,
                       details: updatedTask.details,
                       quotation: updatedTask.quotation,
                       officialFee: updatedTask.officialFee,
@@ -409,6 +423,7 @@ export default function ActiveWorkflowDesk() {
                       assignedToUserId: updatedTask.assignedToUserId,
                       emailSender: updatedTask.emailSender,
                       workLevel: updatedTask.workLevel,
+                      jobWorkStatus: updatedTask.jobWorkStatus,
                     }
                   : task
               )

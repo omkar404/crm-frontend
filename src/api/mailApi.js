@@ -14,6 +14,8 @@ export const fetchMailLeads = async ({
   limit = 10,
   search = "",
   leadSource = "",
+  RCMCPanel = "",
+  RCMCType = "",
   emailVerified = "",
   emailSent = "",
   emailSeen = "",
@@ -33,6 +35,8 @@ export const fetchMailLeads = async ({
       limit,
       search: search || undefined,
       leadSource: leadSource || undefined,
+      RCMCPanel: RCMCPanel || undefined,
+      RCMCType: RCMCType || undefined,
       emailVerified: emailVerified || undefined,
       emailSent: normalizedEmailSent,
       emailSeen: emailSeen || undefined,
@@ -81,6 +85,9 @@ export const fetchFilterOptions = async () => {
   const response = await fetchMailLeads({ page: 1, limit: 1, includeFilters: true });
   return response.filterOptions || {
     leadSource: [],
+    RCMCPanel: [],
+    RCMCType: [],
+    RCMCTypeMap: {},
     sendEmailId: [],
     templateType: [],
     templateSubject: [],

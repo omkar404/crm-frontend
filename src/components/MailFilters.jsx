@@ -1,5 +1,6 @@
 import React from "react";
 import useMailStore from "../store/mailStore";
+import { RCMC_TYPE_MAP } from "../constants/rcmcOptions";
 
 const EMAIL_SENT_FILTER_OPTIONS = [
   "jaggdish@eximinq-connect.in",
@@ -33,6 +34,10 @@ export default function MailFilters() {
   const {
     leadSource,
     setLeadSource,
+    RCMCPanel,
+    setRCMCPanel,
+    RCMCType,
+    setRCMCType,
     filterOptions,
     emailVerified,
     setEmailVerified,
@@ -55,6 +60,10 @@ export default function MailFilters() {
   const dependentFieldClassName =
     "border rounded px-3 py-2 bg-slate-100 text-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100";
   const selectedEmailDetails = EMAIL_SENT_DEPENDENCIES[emailSent] || { wifi: "", browser: "" };
+  const rcmcTypeMap = filterOptions.RCMCTypeMap || RCMC_TYPE_MAP;
+  const availableRCMCTypeList = RCMCPanel
+    ? rcmcTypeMap[RCMCPanel] || []
+    : filterOptions.RCMCType || [];
 
   return (
     <div className="rounded-lg bg-gray-100 p-4 shadow-md">
@@ -66,6 +75,24 @@ export default function MailFilters() {
         >
           <option value="">Lead Source</option>
           {filterOptions.leadSource?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <select value={RCMCPanel} onChange={(e) => setRCMCPanel(e.target.value)} className={selectClassName}>
+          <option value="">RCMC Panel</option>
+          {filterOptions.RCMCPanel?.map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+
+        <select value={RCMCType} onChange={(e) => setRCMCType(e.target.value)} className={selectClassName}>
+          <option value="">RCMC Type</option>
+          {availableRCMCTypeList.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>

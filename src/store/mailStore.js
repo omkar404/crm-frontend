@@ -186,6 +186,7 @@ import {
   exportMailLeadsCSV,
   fetchFilterOptions,
 } from "../api/mailApi";
+import { RCMC_TYPE_MAP } from "../constants/rcmcOptions";
 
 const EMAIL_SENT_FILTER_OPTIONS = [
   "jaggdish@eximinq-connect.in",
@@ -263,6 +264,8 @@ const useMailStore = create((set, get) => ({
 
   // filter states
   leadSource: "",
+  RCMCPanel: "",
+  RCMCType: "",
   emailVerified: "",
   emailSent: "",
   emailSeen: "",
@@ -274,6 +277,9 @@ const useMailStore = create((set, get) => ({
   // filter options (populated from backend)
   filterOptions: {
     leadSource: [],
+    RCMCPanel: [],
+    RCMCType: [],
+    RCMCTypeMap: RCMC_TYPE_MAP,
     sendEmailId: [],
     templateType: [],
     templateSubject: [],
@@ -314,6 +320,8 @@ const useMailStore = create((set, get) => ({
         limit: state.limit,
         search: state.search,
         leadSource: state.leadSource,
+        RCMCPanel: state.RCMCPanel,
+        RCMCType: state.RCMCType,
         emailVerified: state.emailVerified,
         emailSent: state.emailSent,
         emailSeen: state.emailSeen,
@@ -357,6 +365,14 @@ const useMailStore = create((set, get) => ({
 
   // filter setters (each triggers reload)
   setLeadSource: (value) => { set({ leadSource: value, page: 1 }); get().loadLeads(); },
+  setRCMCPanel: (value) => {
+    const map = get().filterOptions.RCMCTypeMap || RCMC_TYPE_MAP;
+    const validTypes = map[value] || [];
+    const nextType = validTypes.includes(get().RCMCType) ? get().RCMCType : "";
+    set({ RCMCPanel: value, RCMCType: nextType, page: 1 });
+    get().loadLeads();
+  },
+  setRCMCType: (value) => { set({ RCMCType: value, page: 1 }); get().loadLeads(); },
   setEmailVerified: (value) => { set({ emailVerified: value, page: 1 }); get().loadLeads(); },
   setEmailSent: (value) => { set({ emailSent: value || "", page: 1 }); get().loadLeads(); },
   setEmailSeen: (value) => { set({ emailSeen: value, page: 1 }); get().loadLeads(); },
@@ -370,6 +386,8 @@ const useMailStore = create((set, get) => ({
     set({
       search: "",
       leadSource: "",
+      RCMCPanel: "",
+      RCMCType: "",
       emailVerified: "",
       emailSent: "",
       emailSeen: "",

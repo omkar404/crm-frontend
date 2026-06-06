@@ -178,6 +178,7 @@ export default function WorkAllocationDesk() {
   const [workTab, setWorkTab] = useState("All");
   const [search, setSearch] = useState("");
   const [source, setSource] = useState("All");
+  const [service, setService] = useState("All");
   const [status, setStatus] = useState("All");
   const [assignedTo, setAssignedTo] = useState("All");
   const [showCompletedOnly, setShowCompletedOnly] = useState(false);
@@ -252,6 +253,17 @@ export default function WorkAllocationDesk() {
     [isAdmin, meta.workflowStatuses]
   );
 
+  const serviceOptions = useMemo(() => {
+    const configuredServices = Object.keys(meta.serviceTypes || {});
+    const taskServices = tasks
+      .map((task) => String(task.serviceType || "").trim())
+      .filter(Boolean);
+
+    return [...new Set([...configuredServices, ...taskServices])].sort((first, second) =>
+      first.localeCompare(second)
+    );
+  }, [meta.serviceTypes, tasks]);
+
   const filteredTasks = useMemo(() => {
     const selectedStaff = isAdmin
       ? meta.staff.find((staff) => staff._id === assignedTo) || null
@@ -270,6 +282,7 @@ export default function WorkAllocationDesk() {
         .includes(search.toLowerCase());
 
       const matchSource = source === "All" || task.clientSource === source;
+      const matchService = service === "All" || task.serviceType === service;
       const matchStatus = status === "All" || task.status === status;
       const taskAssignedName = String(task.assignedToName || "")
         .trim()
@@ -312,6 +325,7 @@ export default function WorkAllocationDesk() {
       return (
         matchSearch &&
         matchSource &&
+        matchService &&
         matchStatus &&
         matchAssignedTo &&
         matchCompleted &&
@@ -320,7 +334,7 @@ export default function WorkAllocationDesk() {
         matchActivePriorityLane
       );
     });
-  }, [assignedTo, isAdmin, meta.staff, search, showCompletedOnly, showStrikeOffOnly, source, status, tasks, workTab]);
+  }, [assignedTo, isAdmin, meta.staff, search, service, showCompletedOnly, showStrikeOffOnly, source, status, tasks, workTab]);
 
   const completedTaskCount = useMemo(
     () =>
@@ -367,6 +381,7 @@ export default function WorkAllocationDesk() {
       setWorkTab("All");
       setSearch("");
       setSource("All");
+      setService("All");
       setStatus("All");
       setAssignedTo("All");
       setShowCompletedOnly(false);
@@ -541,8 +556,8 @@ export default function WorkAllocationDesk() {
             className={[
               "grid gap-3",
               isAdmin
-                ? "xl:grid-cols-[1.15fr_0.34fr_0.46fr_0.46fr]"
-                : "xl:grid-cols-[1.25fr_0.4fr_0.55fr]",
+                ? "xl:grid-cols-[1.08fr_0.32fr_0.42fr_0.42fr_0.42fr]"
+                : "xl:grid-cols-[1.1fr_0.36fr_0.45fr_0.52fr]",
             ].join(" ")}
           >
             <div className="relative">
@@ -559,6 +574,15 @@ export default function WorkAllocationDesk() {
               <option value="All">All Sources</option>
               <option value="Direct">Direct</option>
               <option value="CHA">CHA</option>
+            </WorkdeskSelect>
+
+            <WorkdeskSelect value={service} onChange={(e) => setService(e.target.value)}>
+              <option value="All">All Services</option>
+              {serviceOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
             </WorkdeskSelect>
 
             <WorkdeskSelect value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -689,6 +713,8 @@ export default function WorkAllocationDesk() {
         <TaskManageDrawer
           task={activeTask}
           workflowStatuses={visibleWorkflowStatuses}
+          serviceTypes={meta.serviceTypes}
+          staff={meta.staff}
           onClose={() => {
             setActiveTask(null);
             if (requestedTaskId) {
@@ -706,6 +732,8 @@ export default function WorkAllocationDesk() {
                       ...task,
                       status: updatedTask.status,
                       jobWorkStatus: updatedTask.jobWorkStatus,
+                      serviceType: updatedTask.serviceType,
+                      subType: updatedTask.subType,
                       details: updatedTask.details,
                       quotation: updatedTask.quotation,
                       officialFee: updatedTask.officialFee,

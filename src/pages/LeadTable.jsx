@@ -34,6 +34,7 @@ import LeadFormModal from "../components/LeadFormModal";
 import ImportModal from "../components/ImportModal";
 import LeadFilters from "../components/LeadFilters";
 import { successToast, errorToast } from "@/utils/customToast";
+import { RCMC_PANEL_OPTIONS, RCMC_TYPE_MAP } from "../constants/rcmcOptions";
 
 const priorityBorder = {
   Low: "border-l-4 border-green-400",
@@ -64,22 +65,7 @@ const priorityOrder = { Premium: 0, High: 1, Medium: 2, Low: 3, "": 4 };
 
 // Lists
 const AEOStatusList = ["NA", "AEO - T1", "AEO - T2", "AEO - T3", "AEO - LEO"];
-const RCMCPanelList = [
-  "FIEO",
-  "EEPC",
-  "APPARELS",
-  "CHEMICALS/PLASTIC",
-  "Pharmaceuticals",
-  "Gems & Jewellery",
-  "Leather",
-  "Handicraft",
-  "Electronics & IT",
-  "Sports Goods",
-  "Services",
-  "Commodity Boards",
-  "Agricultural Products",
-  "Marine Products",
-];
+const RCMCPanelList = RCMC_PANEL_OPTIONS;
 
 const industryList = [
   "Agriculture & Farming",
@@ -163,6 +149,8 @@ export default function LeadTable() {
     leadStatus: Object.keys(statusColors),
     AEOStatus: AEOStatusList,
     RCMCPanel: RCMCPanelList,
+    RCMCType: [],
+    RCMCTypeMap: RCMC_TYPE_MAP,
   });
   const [filterOptionsLoaded, setFilterOptionsLoaded] = useState(false);
 
@@ -170,6 +158,7 @@ export default function LeadTable() {
   const [status, setStatus] = useState("");
   const [aeoStatus, setAeoStatus] = useState("");
   const [rcmcStatus, setRcmcStatus] = useState("");
+  const [rcmcType, setRcmcType] = useState("");
   const [industry, setIndustry] = useState("");
   const [leadType, setLeadType] = useState("");
   const [leadSource, setLeadSource] = useState("");
@@ -255,7 +244,7 @@ export default function LeadTable() {
     if (!status) return;
 
     try {
-      await api.put("api/auth/bulk-update-status", {
+      await api.put("/api/auth/bulk-update-status", {
         ids: selectedLeads,
         status,
       });
@@ -281,7 +270,7 @@ export default function LeadTable() {
     if (!confirm.isConfirmed) return;
 
     try {
-      await api.post("api/auth/bulk-delete", { ids: selectedLeads });
+      await api.post("/api/auth/bulk-delete", { ids: selectedLeads });
 
       successToast("Selected leads deleted");
       setSelectedLeads([]);
@@ -298,7 +287,7 @@ export default function LeadTable() {
     latestFetchRequestIdRef.current = requestId;
 
     try {
-      const r = await api.get("api/auth/list", {
+      const r = await api.get("/api/auth/list", {
         params: {
           page,
           limit,
@@ -309,7 +298,9 @@ export default function LeadTable() {
           leadSource: leadSource,
           AEOStatus: aeoStatus,
           RCMCPanel: rcmcStatus,
+          RCMCType: rcmcType,
           includeFilters: !filterOptionsLoaded,
+          _ts: Date.now(),
         },
       });
 
@@ -341,6 +332,7 @@ export default function LeadTable() {
     leadSource,
     aeoStatus,
     rcmcStatus,
+    rcmcType,
   ]);
 
   useEffect(() => {
@@ -374,6 +366,26 @@ export default function LeadTable() {
     return data;
   }, [leads, sortField, sortDir]);
 
+  const availableRCMCTypeList = useMemo(() => {
+    const map = filterOptions.RCMCTypeMap || RCMC_TYPE_MAP;
+    const fromPanel = rcmcStatus ? map[rcmcStatus] || [] : [];
+    if (fromPanel.length) {
+      return fromPanel;
+    }
+    return rcmcType ? [rcmcType] : filterOptions.RCMCType || [];
+  }, [filterOptions, rcmcStatus, rcmcType]);
+
+  useEffect(() => {
+    if (!rcmcType) {
+      return;
+    }
+
+    if (!availableRCMCTypeList.includes(rcmcType)) {
+      setRcmcType("");
+      setPage(1);
+    }
+  }, [availableRCMCTypeList, rcmcType]);
+
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -393,7 +405,7 @@ export default function LeadTable() {
     });
     if (!confirm.isConfirmed) return;
     try {
-      await api.delete(`api/auth/delete/${id}`);
+      await api.delete(`/api/auth/delete/${id}`);
       successToast("Lead deleted successfully!");
       fetchLeads();
     } catch (err) {
@@ -499,6 +511,7 @@ export default function LeadTable() {
               setStatus("");
               setAeoStatus("");
               setRcmcStatus("");
+              setRcmcType("");
               setIndustry("");
               setLeadType("");
               setLeadSource("");
@@ -600,6 +613,9 @@ export default function LeadTable() {
           rcmcStatus={rcmcStatus}
           setRcmcStatus={setRcmcStatus}
           RCMCPanelList={filterOptions.RCMCPanel || RCMCPanelList}
+          rcmcType={rcmcType}
+          setRcmcType={setRcmcType}
+          RCMCTypeList={availableRCMCTypeList}
           industry={industry}
           setIndustry={setIndustry}
           industryList={filterOptions.industry || industryList}

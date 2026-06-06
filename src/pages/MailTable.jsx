@@ -755,6 +755,8 @@ const handleBulkStatusUpdate = async () => {
                 <TableHead>Name of Client</TableHead>
                 <TableHead>Email ID</TableHead>
                 <TableHead>LEAD SOURCE</TableHead>
+                <TableHead>RCMC PANEL</TableHead>
+                <TableHead>RCMC TYPE</TableHead>
                 <TableHead>EMAIL VERIFIED</TableHead>
                 <TableHead>EMAIL SENT</TableHead>
                 <TableHead>Email Seen</TableHead>
@@ -767,9 +769,9 @@ const handleBulkStatusUpdate = async () => {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={13} className="text-center py-8 text-gray-400">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={15} className="text-center py-8 text-gray-400">Loading...</TableCell></TableRow>
               ) : sortedLeads.length === 0 ? (
-                <TableRow><TableCell colSpan={13} className="text-center py-8 text-gray-500">No records found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={15} className="text-center py-8 text-gray-500">No records found</TableCell></TableRow>
               ) : (
                 sortedLeads.map((lead, idx) => {
                   const srNo = (page - 1) * limit + idx + 1;
@@ -839,6 +841,8 @@ const handleBulkStatusUpdate = async () => {
                         </div>
                       </TableCell>
                       <TableCell>{lead.leadSource || "—"}</TableCell>
+                      <TableCell>{lead.RCMCPanel || "—"}</TableCell>
+                      <TableCell>{lead.RCMCType || "—"}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           emailVerifiedValue === "Yes" || String(emailVerifiedValue).toLowerCase() === "ok"

@@ -11,6 +11,7 @@ export default function LeadFilters({
   status, setStatus, leadStatusList,
   aeoStatus, setAeoStatus, AEOStatusList,
   rcmcStatus, setRcmcStatus, RCMCPanelList,
+  rcmcType, setRcmcType, RCMCTypeList,
   industry, setIndustry, industryList,
   leadType, setLeadType, leadTypeList,
   leadSource, setLeadSource, leadSourceList,
@@ -38,6 +39,7 @@ export default function LeadFilters({
   const cleanLeadStatusList = prepareList(leadStatusList);
   const cleanAEOList = prepareList(AEOStatusList);
   const cleanRCMCList = prepareList(RCMCPanelList);
+  const cleanRCMCTypeList = prepareList(RCMCTypeList);
   const cleanIndustryList = prepareList(industryList);
   const cleanLeadTypeList = prepareList(leadTypeList);
   const cleanLeadSourceList = prepareList(leadSourceList);
@@ -75,11 +77,13 @@ export default function LeadFilters({
         list={cleanAEOList}
       />
 
+      <FilterDropdown label="RCMC Panel" value={rcmcStatus} onChange={setRcmcStatus} list={cleanRCMCList} />
+
       <FilterDropdown
-        label="RCMC Status"
-        value={rcmcStatus}
-        onChange={setRcmcStatus}
-        list={cleanRCMCList}
+        label="RCMC Type"
+        value={rcmcType}
+        onChange={setRcmcType}
+        list={cleanRCMCTypeList}
       />
 
       <FilterDropdown
