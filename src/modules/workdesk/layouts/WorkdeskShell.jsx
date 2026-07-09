@@ -103,7 +103,7 @@ export default function WorkdeskShell() {
     };
   }, [pathname]);
 
-  const userRole = user?.role === "ADMIN" ? "Administrator" : "Staff Workspace";
+  const userRole = user?.role === "ADMIN" ? "Administrator" : "Employee Workspace";
 
   return (
     <div className="min-h-screen p-2 md:p-3">
@@ -143,7 +143,7 @@ export default function WorkdeskShell() {
                 </div>
                 <h1 className="mt-3 text-[24px] font-bold leading-none">Work Desk</h1>
                 <p className="mt-2 max-w-[220px] text-sm leading-5 text-slate-300">
-                  Fast workspace for Admin and Staff execution.
+                  Fast workspace for Admin and Employee execution.
                 </p>
               </div>
 
@@ -177,7 +177,9 @@ export default function WorkdeskShell() {
                     year: "numeric",
                   })}
                 </span>
-                <WorkdeskPill tone="dark">{user?.role || "WORKDESK"}</WorkdeskPill>
+                <WorkdeskPill tone="dark">
+                  {user?.role === "STAFF" ? "EMPLOYEE" : user?.role || "WORKDESK"}
+                </WorkdeskPill>
               </div>
             </div>
 

@@ -268,11 +268,13 @@ const useMailStore = create((set, get) => ({
   RCMCType: "",
   emailVerified: "",
   emailSent: "",
+  emailSentOn: "",
   emailSeen: "",
   emailStatus: "",
   enquiryStatus: "",
   turnup: "",
   cdcrNo: "",
+  nameInitialRanges: [],
 
   // filter options (populated from backend)
   filterOptions: {
@@ -324,11 +326,13 @@ const useMailStore = create((set, get) => ({
         RCMCType: state.RCMCType,
         emailVerified: state.emailVerified,
         emailSent: state.emailSent,
+        emailSentOn: state.emailSent ? state.emailSentOn : "",
         emailSeen: state.emailSeen,
         emailStatus: state.emailStatus,
         enquiryStatus: state.enquiryStatus,
         turnup: state.turnup,
         cdcrNo: state.cdcrNo,
+        nameInitialRanges: state.nameInitialRanges,
         includeFilters: !state.filterOptionsLoaded,
       });
       if (get().latestListRequestId !== requestId) {
@@ -374,12 +378,29 @@ const useMailStore = create((set, get) => ({
   },
   setRCMCType: (value) => { set({ RCMCType: value, page: 1 }); get().loadLeads(); },
   setEmailVerified: (value) => { set({ emailVerified: value, page: 1 }); get().loadLeads(); },
-  setEmailSent: (value) => { set({ emailSent: value || "", page: 1 }); get().loadLeads(); },
+  setEmailSent: (value) => {
+    const nextEmailSent = value || "";
+    set({
+      emailSent: nextEmailSent,
+      emailSentOn: nextEmailSent ? get().emailSentOn : "",
+      page: 1,
+    });
+    get().loadLeads();
+  },
+  setEmailSentOn: (value) => { set({ emailSentOn: value || "", page: 1 }); get().loadLeads(); },
   setEmailSeen: (value) => { set({ emailSeen: value, page: 1 }); get().loadLeads(); },
   setEmailStatus: (value) => { set({ emailStatus: value, page: 1 }); get().loadLeads(); },
   setEnquiryStatus: (value) => { set({ enquiryStatus: value, page: 1 }); get().loadLeads(); },
   setTurnup: (value) => { set({ turnup: value, page: 1 }); get().loadLeads(); },
   setCdcrNo: (value) => { set({ cdcrNo: value, page: 1 }); get().loadLeads(); },
+  toggleNameInitialRange: (value) => {
+    const current = get().nameInitialRanges;
+    const nameInitialRanges = current.includes(value)
+      ? current.filter((range) => range !== value)
+      : [...current, value];
+    set({ nameInitialRanges, page: 1 });
+    get().loadLeads();
+  },
 
   clearFilters: () => {
     clearTimeout(searchTimer);
@@ -390,11 +411,13 @@ const useMailStore = create((set, get) => ({
       RCMCType: "",
       emailVerified: "",
       emailSent: "",
+      emailSentOn: "",
       emailSeen: "",
       emailStatus: "",
       enquiryStatus: "",
       turnup: "",
       cdcrNo: "",
+      nameInitialRanges: [],
       page: 1,
     });
     get().loadLeads();
@@ -464,22 +487,26 @@ const useMailStore = create((set, get) => ({
       leadSource,
       emailVerified,
       emailSent,
+      emailSentOn,
       emailSeen,
       emailStatus,
       enquiryStatus,
       turnup,
       cdcrNo,
+      nameInitialRanges,
     } = get();
     let data = await exportMailLeadsCSV({
       search,
       leadSource,
       emailVerified,
       emailSent,
+      emailSentOn: emailSent ? emailSentOn : "",
       emailSeen,
       emailStatus,
       enquiryStatus,
       turnup,
       cdcrNo,
+      nameInitialRanges,
     });
     if (!data.length) return;
 

@@ -14,7 +14,7 @@ import { useWorkdeskAuthStore } from "@/store/workdeskAuth.store";
 import { errorToast, successToast } from "@/utils/customToast";
 import { getApiErrorMessage } from "@/utils/apiError";
 
-const ADMIN_ONLY_WORKFLOW_STATUSES = ["Invoice Raised", "Invoice Paid", "Strike Off"];
+const ADMIN_ONLY_WORKFLOW_STATUSES = ["Invoice Raised", "Invoice Paid", "Invoice Write-Off", "Strike Off"];
 
 function formatAmount(value) {
   if (value === null || value === undefined || value === "") return "-";
@@ -103,6 +103,8 @@ export default function TaskManageDrawer({
   const [invoiceForm, setInvoiceForm] = useState({
     invoiceNumber: "",
     issuedDate: "",
+    officialFee: "",
+    serviceCharges: "",
     netAmount: "",
     gstAmount: "",
   });
@@ -138,9 +140,12 @@ export default function TaskManageDrawer({
   }, [isAdmin, task.status, workflowStatuses]);
 
   const quotationMode = invoice?.quotationMode || task.quotation || "";
-  const officialFee = parseAmount(invoice?.officialFee ?? task.officialFee) ?? 0;
-  const serviceCharges = parseAmount(invoice?.serviceCharges ?? task.serviceCharges) ?? 0;
-  const fallbackNetAmount = parseAmount(invoiceForm.netAmount) ?? parseAmount(invoice?.netAmount) ?? 0;
+  const quotationOfficialFee = parseAmount(task.officialFee) ?? 0;
+  const quotationServiceCharges = parseAmount(task.serviceCharges) ?? 0;
+  const invoiceOfficialFee = parseAmount(invoiceForm.officialFee) ?? parseAmount(invoice?.officialFee) ?? quotationOfficialFee;
+  const invoiceServiceFees =
+    parseAmount(invoiceForm.serviceCharges) ?? parseAmount(invoice?.serviceCharges) ?? quotationServiceCharges;
+  const fallbackNetAmount = roundAmount(invoiceOfficialFee + invoiceServiceFees);
   const previewGstAmount = parseAmount(invoiceForm.gstAmount) ?? parseAmount(invoice?.gstAmount) ?? 0;
   const previewTotalAmount = roundAmount(fallbackNetAmount + previewGstAmount);
   const billAmount = parseAmount(invoice?.totalAmount) ?? previewTotalAmount;
@@ -149,7 +154,7 @@ export default function TaskManageDrawer({
 
   const showInvoiceSection =
     isAdmin && (selectedStatus === "Invoice Raised" || selectedStatus === "Invoice Paid" || Boolean(invoice));
-  const invoiceLocked = ["Invoice Raised", "Invoice Paid"].includes(task.status) || Boolean(invoice);
+  const invoiceLocked = ["Invoice Raised", "Invoice Paid", "Invoice Write-Off"].includes(task.status) || Boolean(invoice);
   const showInvoiceEditor = isAdmin && selectedStatus === "Invoice Raised" && !invoiceLocked;
   const paymentLocked = task.status === "Invoice Paid" || invoice?.status === "Invoice Paid";
   const showPaymentEditor =
@@ -171,10 +176,22 @@ export default function TaskManageDrawer({
     setInvoiceForm({
       invoiceNumber: invoice?.invoiceNumber || "",
       issuedDate: toInputDate(invoice?.issuedDate || new Date()),
-      netAmount: toInputNumber(invoice?.netAmount),
+      officialFee: toInputNumber(invoice?.officialFee ?? task.officialFee),
+      serviceCharges: toInputNumber(invoice?.serviceCharges ?? task.serviceCharges),
+      netAmount: toInputNumber(invoice?.netAmount ?? roundAmount((task.officialFee || 0) + (task.serviceCharges || 0))),
       gstAmount: toInputNumber(invoice?.gstAmount),
     });
-  }, [invoice?.gstAmount, invoice?.invoiceNumber, invoice?.issuedDate, invoice?.netAmount, task._id]);
+  }, [
+    invoice?.gstAmount,
+    invoice?.invoiceNumber,
+    invoice?.issuedDate,
+    invoice?.netAmount,
+    invoice?.officialFee,
+    invoice?.serviceCharges,
+    task._id,
+    task.officialFee,
+    task.serviceCharges,
+  ]);
 
   useEffect(() => {
     setPaymentForm({
@@ -249,17 +266,50 @@ export default function TaskManageDrawer({
     }
 
     if (selectedStatus === "Invoice Raised") {
+      const invoiceOfficialFeeValue = parseAmount(invoiceForm.officialFee);
+      const invoiceServiceChargesValue = parseAmount(invoiceForm.serviceCharges);
+      const invoiceGstAmountValue = parseAmount(invoiceForm.gstAmount);
+      const requiredInvoiceFields = [
+        ["Invoice Number", invoiceForm.invoiceNumber],
+        ["Invoice Date", invoiceForm.issuedDate],
+        ["Quotation", quotationMode],
+        ["Invoice Official Fees", invoiceForm.officialFee],
+        ["Invoice Service Fees", invoiceForm.serviceCharges],
+        ["GST", invoiceForm.gstAmount],
+      ];
+      const missingInvoiceFields = requiredInvoiceFields
+        .filter(([, value]) => value === null || value === undefined || String(value).trim() === "")
+        .map(([label]) => label);
+
+      if (missingInvoiceFields.length) {
+        errorToast(`${missingInvoiceFields.join(", ")} required before raising the invoice.`);
+        return;
+      }
+
+      const invalidInvoiceAmount = [
+        ["Invoice Official Fees", invoiceOfficialFeeValue],
+        ["Invoice Service Fees", invoiceServiceChargesValue],
+        ["GST", invoiceGstAmountValue],
+      ].find(([, value]) => value === null);
+
+      if (invalidInvoiceAmount) {
+        errorToast(`${invalidInvoiceAmount[0]} must be a valid amount.`);
+        return;
+      }
+
+      const invoiceNetAmountValue = roundAmount(invoiceOfficialFeeValue + invoiceServiceChargesValue);
+
       try {
         setSubmitting(true);
         const updatedTask = await raiseWorkdeskInvoiceApi({
           taskId: task._id,
-          invoiceNumber: invoiceForm.invoiceNumber,
+          invoiceNumber: invoiceForm.invoiceNumber.trim(),
           issuedDate: invoiceForm.issuedDate,
           quotationMode,
-          officialFee,
-          serviceCharges,
-          netAmount: parseAmount(invoiceForm.netAmount),
-          gstAmount: parseAmount(invoiceForm.gstAmount),
+          officialFee: invoiceOfficialFeeValue,
+          serviceCharges: invoiceServiceChargesValue,
+          netAmount: invoiceNetAmountValue,
+          gstAmount: invoiceGstAmountValue,
         });
         onTaskUpdated?.(updatedTask);
         successToast("Invoice raised successfully.");
@@ -487,12 +537,14 @@ export default function TaskManageDrawer({
                   ? paymentLocked
                     ? "Payment Locked"
                     : "Save Payment"
+                  : selectedStatus === "Invoice Write-Off"
+                  ? "Write Off"
                   : "Send"}
               </button>
             </div>
             {selectedStatus === "Pending for Invoicing" ? (
               <p className="mt-3 text-xs font-medium text-sky-800">
-                Marking this stage as verified will treat the staff work as completed and move it
+                Marking this stage as verified will treat the employee work as completed and move it
                 to billing.
               </p>
             ) : null}
@@ -502,9 +554,15 @@ export default function TaskManageDrawer({
                 only in the admin strike-off view.
               </p>
             ) : null}
+            {selectedStatus === "Invoice Write-Off" && isAdmin ? (
+              <p className="mt-3 text-xs font-medium text-sky-800">
+                Writing off this task will move it out of active execution and into the Invoice
+                Write-Off section.
+              </p>
+            ) : null}
             {isNonAdminInvoiceStatus ? (
               <p className="mt-3 text-xs font-medium text-sky-800">
-                Admin completed this task. The final invoice status is shown here for staff tracking.
+                Admin completed this task. The final invoice status is shown here for employee tracking.
               </p>
             ) : null}
             {isAdmin && selectedStatus === "Invoice Raised" && invoiceLocked ? (
@@ -574,7 +632,7 @@ export default function TaskManageDrawer({
 
                 <div>
                   <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-                    Assigned Staff
+                    Assigned Employee
                   </label>
                   <select
                     value={editForm.assignedToUserId}
@@ -583,7 +641,7 @@ export default function TaskManageDrawer({
                     }
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                   >
-                    <option value="">Assign staff</option>
+                    <option value="">Assign employee</option>
                     {staff.map((member) => (
                       <option key={member._id} value={member._id}>
                         {member.name} ({member.email})
@@ -839,7 +897,7 @@ export default function TaskManageDrawer({
                     Quotation Official Fee
                   </div>
                   <div className="mt-2 text-base font-bold text-slate-900">
-                    {formatAmount(officialFee)}
+                    {formatAmount(quotationOfficialFee)}
                   </div>
                 </div>
 
@@ -848,35 +906,66 @@ export default function TaskManageDrawer({
                     Quotation Service Charges
                   </div>
                   <div className="mt-2 text-base font-bold text-slate-900">
-                    {formatAmount(serviceCharges)}
+                    {formatAmount(quotationServiceCharges)}
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-violet-100 bg-white/90 p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
-                    Invoice Net Amount
+                    Invoice Official Fees
                   </div>
                   {showInvoiceEditor ? (
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      value={invoiceForm.netAmount}
+                      value={invoiceForm.officialFee}
                       onChange={(e) =>
-                        setInvoiceForm((current) => ({ ...current, netAmount: e.target.value }))
+                        setInvoiceForm((current) => ({ ...current, officialFee: e.target.value }))
                       }
                       className="mt-2 w-full rounded-lg border border-violet-100 px-3 py-2 text-sm"
                     />
                   ) : (
                     <div className="mt-2 text-base font-bold text-slate-900">
-                      {formatAmount(invoice?.netAmount)}
+                      {formatAmount(invoice?.officialFee)}
                     </div>
                   )}
                 </div>
 
                 <div className="rounded-xl border border-violet-100 bg-white/90 p-4">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
-                    Invoice GST
+                    Invoice Service Fees
+                  </div>
+                  {showInvoiceEditor ? (
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={invoiceForm.serviceCharges}
+                      onChange={(e) =>
+                        setInvoiceForm((current) => ({ ...current, serviceCharges: e.target.value }))
+                      }
+                      className="mt-2 w-full rounded-lg border border-violet-100 px-3 py-2 text-sm"
+                    />
+                  ) : (
+                    <div className="mt-2 text-base font-bold text-slate-900">
+                      {formatAmount(invoice?.serviceCharges)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-violet-100 bg-white/90 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                    Invoice Net Amount
+                  </div>
+                  <div className="mt-2 text-base font-bold text-slate-900">
+                    {formatAmount(invoice?.netAmount ?? fallbackNetAmount)}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-violet-100 bg-white/90 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                    GST
                   </div>
                   {showInvoiceEditor ? (
                     <input

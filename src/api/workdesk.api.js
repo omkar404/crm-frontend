@@ -60,6 +60,11 @@ export const raiseWorkdeskInvoiceApi = async (payload) => {
   return data;
 };
 
+export const updateWorkdeskInvoiceApi = async (invoiceId, payload = {}) => {
+  const { data } = await workdeskAxios.put(`/invoices/${invoiceId}`, payload);
+  return data;
+};
+
 export const payWorkdeskInvoiceApi = async (invoiceId, payload = {}) => {
   const { data } = await workdeskAxios.put(`/invoices/${invoiceId}/pay`, payload);
   return data;

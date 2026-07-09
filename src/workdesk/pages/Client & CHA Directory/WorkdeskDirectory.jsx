@@ -308,7 +308,7 @@ export default function WorkdeskDirectory() {
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <WorkdeskPill tone="dark">
-                {isAdmin ? "Admin control enabled" : "Protected staff access"}
+                {isAdmin ? "Admin control enabled" : "Protected employee access"}
               </WorkdeskPill>
               <WorkdeskPill tone="info">
                 {tab === "clients" ? "Client cards" : tab === "chas" ? "CHA registry" : "Unified directory"}

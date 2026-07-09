@@ -11,8 +11,7 @@ import {
 import TaskManageDrawer from "./TaskManageDrawer";
 
 const WORK_LEVEL_ORDER = ["High Risk", "Pendency", "Important"];
-const COMPLETED_TASK_STATUSES = ["Pending for Invoicing", "Invoice Raised", "Invoice Paid"];
-const HIDDEN_ACTIVE_WORKFLOW_STATUSES = ["Invoice Paid"];
+const COMPLETED_TASK_STATUSES = ["Pending for Invoicing", "Invoice Raised", "Invoice Paid", "Invoice Write-Off"];
 const STRIKE_OFF_STATUS = "Strike Off";
 const DEFAULT_WORKFLOW_STATUSES = [
   "Request Initiated",
@@ -32,6 +31,7 @@ const DEFAULT_WORKFLOW_STATUSES = [
   "Pending for Invoicing",
   "Invoice Raised",
   "Invoice Paid",
+  "Invoice Write-Off",
 ];
 
 function getSLA(task) {
@@ -82,6 +82,7 @@ function StatusBadge({ status }) {
     "Quote Approval Pending": "warning",
     "Quote Approved": "info",
     "Invoice Paid": "success",
+    "Invoice Write-Off": "dark",
     "Pending for Invoicing": "warning",
     "Invoice Raised": "info",
   };
@@ -115,7 +116,7 @@ function isActiveWorkflowTask(task) {
     task.status !== STRIKE_OFF_STATUS &&
     task.jobWorkStatus !== STRIKE_OFF_STATUS &&
     task.jobWorkStatus !== "Completed" &&
-    !HIDDEN_ACTIVE_WORKFLOW_STATUSES.includes(task.status)
+    !COMPLETED_TASK_STATUSES.includes(task.status)
   );
 }
 

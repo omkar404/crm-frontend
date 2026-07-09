@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Layers3, Plus, Settings2 } from "lucide-react";
 
 import { getWorkdeskMetaApi, updateWorkdeskServiceTypesApi } from "@/api/workdesk.api";
@@ -19,9 +19,16 @@ export default function WorkdeskSettingsPage() {
   const isAdmin = user?.role === "ADMIN";
   const [serviceTypes, setServiceTypes] = useState({});
   const [newMainType, setNewMainType] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [servicePage, setServicePage] = useState(1);
+  const [servicePageSize, setServicePageSize] = useState(10);
   const [draftSubs, setDraftSubs] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setServicePage(1);
+  }, [serviceSearch, servicePageSize]);
 
   useEffect(() => {
     const load = async () => {
@@ -50,9 +57,14 @@ export default function WorkdeskSettingsPage() {
       return;
     }
 
+    if ((serviceTypes[mainType] || []).includes(value)) {
+      errorToast("This sub-type already exists.");
+      return;
+    }
+
     setServiceTypes((prev) => ({
       ...prev,
-      [mainType]: [...new Set([...(prev[mainType] || []), value])],
+      [mainType]: [value, ...(prev[mainType] || [])],
     }));
     setDraftValue(mainType, "");
   };
@@ -75,7 +87,8 @@ export default function WorkdeskSettingsPage() {
       return;
     }
 
-    setServiceTypes((prev) => ({ ...prev, [value]: [] }));
+    setServiceTypes((prev) => Object.fromEntries([[value, []], ...Object.entries(prev)]));
+    setServicePage(1);
     setNewMainType("");
   };
 
@@ -100,6 +113,32 @@ export default function WorkdeskSettingsPage() {
     (sum, subTypes) => sum + (Array.isArray(subTypes) ? subTypes.length : 0),
     0
   );
+  const filteredServiceEntries = useMemo(() => {
+    const query = serviceSearch.trim().toLowerCase();
+    const entries = Object.entries(serviceTypes);
+    if (!query) return entries;
+
+    return entries.filter(([mainType, subTypes]) => {
+      const haystack = [mainType, ...(Array.isArray(subTypes) ? subTypes : [])]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [serviceSearch, serviceTypes]);
+  const totalServicePages = Math.max(1, Math.ceil(filteredServiceEntries.length / servicePageSize));
+  const safeServicePage = Math.min(servicePage, totalServicePages);
+  const paginatedServiceEntries = useMemo(() => {
+    const start = (safeServicePage - 1) * servicePageSize;
+    return filteredServiceEntries.slice(start, start + servicePageSize);
+  }, [filteredServiceEntries, safeServicePage, servicePageSize]);
+  const pageStart = filteredServiceEntries.length === 0 ? 0 : (safeServicePage - 1) * servicePageSize + 1;
+  const pageEnd = Math.min(filteredServiceEntries.length, safeServicePage * servicePageSize);
+
+  useEffect(() => {
+    if (servicePage !== safeServicePage) {
+      setServicePage(safeServicePage);
+    }
+  }, [safeServicePage, servicePage]);
 
   return (
     <WorkdeskPage
@@ -159,10 +198,42 @@ export default function WorkdeskSettingsPage() {
         </div>
       }
     >
+      {isAdmin ? (
+        <WorkdeskSection
+          title="Create Service Type"
+          description="Add a new main service category before editing sub-types below."
+          aside={<WorkdeskPill tone="info">Quick add</WorkdeskPill>}
+        >
+          <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50/80 p-4">
+            <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+              <WorkdeskInput
+                value={newMainType}
+                onChange={(e) => setNewMainType(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addMainType();
+                }}
+                placeholder="Main service type name"
+              />
+              <button
+                type="button"
+                onClick={addMainType}
+                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Add Main Type
+              </button>
+            </div>
+          </div>
+        </WorkdeskSection>
+      ) : null}
+
       <WorkdeskSection
         title="Service Request Master"
         description="Define main service types and their operational sub-types for a cleaner work allocation experience."
-        aside={<WorkdeskPill tone="default">{mainTypeCount} categories</WorkdeskPill>}
+        aside={
+          <WorkdeskPill tone="default">
+            {filteredServiceEntries.length} of {mainTypeCount} categories
+          </WorkdeskPill>
+        }
       >
         {loading ? (
           <p className="text-sm text-slate-500">Loading settings...</p>
@@ -173,7 +244,33 @@ export default function WorkdeskSettingsPage() {
           />
         ) : (
           <div className="space-y-5">
-            {Object.entries(serviceTypes).map(([mainType, subTypes]) => (
+            <div className="rounded-[22px] border border-slate-200 bg-white/85 p-3 shadow-sm">
+              <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+                <WorkdeskInput
+                  value={serviceSearch}
+                  onChange={(e) => setServiceSearch(e.target.value)}
+                  placeholder="Filter by main type or sub-type"
+                />
+                <select
+                  value={servicePageSize}
+                  onChange={(e) => setServicePageSize(Number(e.target.value))}
+                  className="min-h-[48px] rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredServiceEntries.length === 0 ? (
+              <WorkdeskEmptyState
+                title="No service types match this filter"
+                description="Clear or change the filter to continue editing the service master."
+              />
+            ) : null}
+
+            {paginatedServiceEntries.map(([mainType, subTypes]) => (
               <div
                 key={mainType}
                 className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(248,250,252,1)_0%,rgba(255,255,255,1)_100%)] p-5 shadow-sm"
@@ -241,33 +338,38 @@ export default function WorkdeskSettingsPage() {
                 ) : null}
               </div>
             ))}
+
+            {filteredServiceEntries.length > 0 ? (
+              <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200 bg-white/85 p-3 shadow-sm md:flex-row md:items-center md:justify-between">
+                <div className="text-sm font-semibold text-slate-600">
+                  Showing {pageStart}-{pageEnd} of {filteredServiceEntries.length} categories
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setServicePage((current) => Math.max(1, current - 1))}
+                    disabled={safeServicePage === 1}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                    Page {safeServicePage} of {totalServicePages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setServicePage((current) => Math.min(totalServicePages, current + 1))}
+                    disabled={safeServicePage === totalServicePages}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </WorkdeskSection>
-
-      {isAdmin ? (
-        <WorkdeskSection
-          title="Create New Main Service Type"
-          description="Add a new category when expanding the service request catalog."
-        >
-          <div className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50/80 p-5">
-            <div className="flex flex-col gap-3 md:flex-row">
-              <WorkdeskInput
-                value={newMainType}
-                onChange={(e) => setNewMainType(e.target.value)}
-                placeholder="Main service type name"
-              />
-              <button
-                type="button"
-                onClick={addMainType}
-                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                Add Main Type
-              </button>
-            </div>
-          </div>
-        </WorkdeskSection>
-      ) : null}
     </WorkdeskPage>
   );
 }

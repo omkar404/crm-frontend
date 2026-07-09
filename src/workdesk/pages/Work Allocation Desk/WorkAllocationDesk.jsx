@@ -36,7 +36,7 @@ function getSLA(task) {
   const diffHours = Math.ceil((deadline - now) / (1000 * 60 * 60));
   const completed =
     task.jobWorkStatus === "Completed" ||
-    ["Pending for Invoicing", "Invoice Raised", "Invoice Paid"].includes(task.status);
+    ["Pending for Invoicing", "Invoice Raised", "Invoice Paid", "Invoice Write-Off"].includes(task.status);
   const strikeOff = task.jobWorkStatus === STRIKE_OFF_STATUS || task.status === STRIKE_OFF_STATUS;
 
   return {
@@ -47,7 +47,7 @@ function getSLA(task) {
   };
 }
 
-const COMPLETED_TASK_STATUSES = ["Pending for Invoicing", "Invoice Raised", "Invoice Paid"];
+const COMPLETED_TASK_STATUSES = ["Pending for Invoicing", "Invoice Raised", "Invoice Paid", "Invoice Write-Off"];
 const STRIKE_OFF_STATUS = "Strike Off";
 const DEFAULT_WORKFLOW_STATUSES = [
   "Request Initiated",
@@ -67,6 +67,7 @@ const DEFAULT_WORKFLOW_STATUSES = [
   "Pending for Invoicing",
   "Invoice Raised",
   "Invoice Paid",
+  "Invoice Write-Off",
 ];
 
 function StatusAndSLA({ task }) {
@@ -113,6 +114,7 @@ function StatusBadge({ status }) {
     "Quote Approval Pending": "warning",
     "Quote Approved": "info",
     "Invoice Paid": "success",
+    "Invoice Write-Off": "dark",
     "Pending for Invoicing": "warning",
     "Invoice Raised": "info",
     "Strike Off": "dark",
@@ -181,6 +183,7 @@ export default function WorkAllocationDesk() {
   const [service, setService] = useState("All");
   const [status, setStatus] = useState("All");
   const [assignedTo, setAssignedTo] = useState("All");
+  const [showSmartAll, setShowSmartAll] = useState(false);
   const [showCompletedOnly, setShowCompletedOnly] = useState(false);
   const [showStrikeOffOnly, setShowStrikeOffOnly] = useState(false);
   const [activeTask, setActiveTask] = useState(null);
@@ -307,16 +310,25 @@ export default function WorkAllocationDesk() {
       const strikeOffTask = isStrikeOffTask(task);
       const matchCompleted = !showCompletedOnly || completedTask;
       const matchStrikeOff =
-        !showStrikeOffOnly
+        showSmartAll
+          ? true
+          : !showStrikeOffOnly
           ? (isAdmin ? !strikeOffTask : true)
           : strikeOffTask;
       const normalizedTaskWorkLevel = normalizeWorkLevel(task.workLevel);
+      const activeSmartWorkLevel = ["High Risk", "Pendency", "Important"].includes(normalizedTaskWorkLevel);
+      const smartAllTask =
+        (activeSmartWorkLevel && !completedTask && !strikeOffTask) ||
+        completedTask ||
+        strikeOffTask;
       const matchWork =
+        showSmartAll ||
         showCompletedOnly ||
         showStrikeOffOnly ||
         (workTab === "All" && !completedTask && !strikeOffTask) ||
         normalizedTaskWorkLevel === workTab;
       const matchActivePriorityLane =
+        showSmartAll ||
         showCompletedOnly ||
         showStrikeOffOnly ||
         workTab === "All" ||
@@ -331,10 +343,11 @@ export default function WorkAllocationDesk() {
         matchCompleted &&
         matchStrikeOff &&
         matchWork &&
-        matchActivePriorityLane
+        matchActivePriorityLane &&
+        (!showSmartAll || smartAllTask)
       );
     });
-  }, [assignedTo, isAdmin, meta.staff, search, service, showCompletedOnly, showStrikeOffOnly, source, status, tasks, workTab]);
+  }, [assignedTo, isAdmin, meta.staff, search, service, showCompletedOnly, showSmartAll, showStrikeOffOnly, source, status, tasks, workTab]);
 
   const completedTaskCount = useMemo(
     () =>
@@ -355,7 +368,7 @@ export default function WorkAllocationDesk() {
 
   const deskStats = useMemo(() => {
     const activeTasks = tasks.filter(
-      (task) => task.status !== STRIKE_OFF_STATUS && task.jobWorkStatus !== STRIKE_OFF_STATUS
+      (task) => !isCompletedTask(task) && !isStrikeOffTask(task)
     );
     const overdue = activeTasks.filter((task) => task.workLevel === "High Risk").length;
     const pending = filteredTasks.filter(
@@ -384,6 +397,7 @@ export default function WorkAllocationDesk() {
       setService("All");
       setStatus("All");
       setAssignedTo("All");
+      setShowSmartAll(false);
       setShowCompletedOnly(false);
       setShowStrikeOffOnly(false);
       await Promise.all([loadReferenceData(), loadTasks({ silent: true })]);
@@ -455,7 +469,7 @@ export default function WorkAllocationDesk() {
             </div>
             <h3 className="mt-2 text-xl font-bold">Execution-first view</h3>
             <div className="mt-4 flex flex-wrap gap-2">
-              <WorkdeskPill tone="dark">{isAdmin ? "Admin Controls" : "Staff View"}</WorkdeskPill>
+              <WorkdeskPill tone="dark">{isAdmin ? "Admin Controls" : "Employee View"}</WorkdeskPill>
               <WorkdeskPill tone="info">{visibleWorkflowStatuses.length} statuses</WorkdeskPill>
               <WorkdeskPill tone="success">{deskStats.completed} completed</WorkdeskPill>
             </div>
@@ -487,6 +501,7 @@ export default function WorkAllocationDesk() {
               value={workTab}
               onChange={(nextTab) => {
                 setWorkTab(nextTab);
+                setShowSmartAll(false);
                 setShowCompletedOnly(false);
                 setShowStrikeOffOnly(false);
               }}
@@ -506,6 +521,7 @@ export default function WorkAllocationDesk() {
               type="button"
               onClick={() => {
                 setWorkTab("All");
+                setShowSmartAll(false);
                 setShowStrikeOffOnly(false);
                 setShowCompletedOnly((current) => !current);
               }}
@@ -530,6 +546,7 @@ export default function WorkAllocationDesk() {
                 type="button"
                 onClick={() => {
                   setWorkTab("All");
+                  setShowSmartAll(false);
                   setShowCompletedOnly(false);
                   setShowStrikeOffOnly((current) => !current);
                 }}
@@ -547,6 +564,27 @@ export default function WorkAllocationDesk() {
               >
                 <AlertCircle className="h-4 w-4" />
                 Strike Off
+              </button>
+            ) : null}
+
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkTab("All");
+                  setShowCompletedOnly(false);
+                  setShowStrikeOffOnly(false);
+                  setShowSmartAll((current) => !current);
+                }}
+                aria-pressed={showSmartAll}
+                className={[
+                  "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-sm transition",
+                  showSmartAll
+                    ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:text-slate-950",
+                ].join(" ")}
+              >
+                All
               </button>
             ) : null}
 

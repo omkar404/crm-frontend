@@ -81,7 +81,7 @@ export default function AllocateWorkModal({
 
   const submit = async () => {
     if (!form.clientId || !form.serviceType || !form.subType || !form.assignedToUserId) {
-      errorToast("Client, service type, sub type, and assigned staff are required.");
+      errorToast("Client, service type, sub type, and assigned employee are required.");
       return;
     }
 
@@ -314,14 +314,14 @@ export default function AllocateWorkModal({
               <div className="space-y-3">
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
-                    Assign Staff
+                    Assign Employee
                   </label>
                   <select
                     className="w-full rounded-xl border border-white/10 bg-white/95 px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-200"
                     value={form.assignedToUserId}
                     onChange={(e) => setForm({ ...form, assignedToUserId: e.target.value })}
                   >
-                    <option value="">Assign staff</option>
+                    <option value="">Assign employee</option>
                     {staff.map((member) => (
                       <option key={member._id} value={member._id}>
                         {member.name} ({member.email})

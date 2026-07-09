@@ -29,6 +29,7 @@ const EMAIL_SENT_DEPENDENCIES = {
 
 const ENQUIRY_STATUS_OPTIONS = ["Pending", "Reverted", "Close", "No Revert"];
 const TURNUP_OPTIONS = ["Yes", "No"];
+const NAME_INITIAL_RANGE_OPTIONS = ["A-H", "I-P", "Q-Z"];
 
 export default function MailFilters() {
   const {
@@ -43,6 +44,8 @@ export default function MailFilters() {
     setEmailVerified,
     emailSent,
     setEmailSent,
+    emailSentOn,
+    setEmailSentOn,
     emailSeen,
     setEmailSeen,
     emailStatus,
@@ -53,6 +56,8 @@ export default function MailFilters() {
     setTurnup,
     cdcrNo,
     setCdcrNo,
+    nameInitialRanges,
+    toggleNameInitialRange,
     clearFilters,
   } = useMailStore();
 
@@ -124,6 +129,15 @@ export default function MailFilters() {
             </option>
           ))}
         </select>
+
+        <input
+          type="date"
+          value={emailSentOn}
+          onChange={(e) => setEmailSentOn(e.target.value)}
+          disabled={!emailSent}
+          title={emailSent ? "Filter by Email Sent On date" : "Select Email Sent first"}
+          className={emailSent ? selectClassName : dependentFieldClassName}
+        />
 
         <input
           type="text"
@@ -207,6 +221,21 @@ export default function MailFilters() {
             </option>
           ))}
         </select>
+
+        <fieldset className="flex min-h-10 items-center gap-4 rounded border bg-white px-3 py-2">
+          <legend className="sr-only">Name or Company Name</legend>
+          {NAME_INITIAL_RANGE_OPTIONS.map((range) => (
+            <label key={range} className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={nameInitialRanges.includes(range)}
+                onChange={() => toggleNameInitialRange(range)}
+                className="h-4 w-4 accent-blue-600"
+              />
+              <span>{range}</span>
+            </label>
+          ))}
+        </fieldset>
       </div>
 
       <div className="mt-3 flex justify-end">

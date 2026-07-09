@@ -18,11 +18,13 @@ export const fetchMailLeads = async ({
   RCMCType = "",
   emailVerified = "",
   emailSent = "",
+  emailSentOn = "",
   emailSeen = "",
   emailStatus = "",
   enquiryStatus = "",
   turnup = "",
   cdcrNo = "",
+  nameInitialRanges = [],
   includeFilters = false,
 } = {}) => {
   const normalizedEmailSent = Array.isArray(emailSent)
@@ -39,11 +41,15 @@ export const fetchMailLeads = async ({
       RCMCType: RCMCType || undefined,
       emailVerified: emailVerified || undefined,
       emailSent: normalizedEmailSent,
+      emailSentOn: emailSentOn || undefined,
       emailSeen: emailSeen || undefined,
       emailStatus: emailStatus || undefined,
       enquiryStatus: enquiryStatus || undefined,
       turnup: turnup || undefined,
       cdcrNo: cdcrNo || undefined,
+      nameInitialRanges: Array.isArray(nameInitialRanges)
+        ? nameInitialRanges.join(",") || undefined
+        : nameInitialRanges || undefined,
       includeFilters: includeFilters || undefined,
     },
   });
